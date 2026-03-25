@@ -1,8 +1,9 @@
 ﻿using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Exceptions;
-using SuperheroRegistry.Domain.Entities;
 
-public class Hero : BaseEntity
+namespace SuperheroRegistry.Domain.Entities
+{
+    public class Hero : BaseEntity
 {
     private static readonly string[] ForbiddenPhrases =
         ["tragic past", "chosen one", "mysterious organization"];
@@ -90,4 +91,5 @@ public class Hero : BaseEntity
         }
         return false;
     }
+}
 }

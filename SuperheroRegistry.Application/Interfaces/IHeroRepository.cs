@@ -1,4 +1,6 @@
-﻿namespace SuperheroRegistry.Application.Interfaces
+﻿using SuperheroRegistry.Domain.Entities;
+
+namespace SuperheroRegistry.Application.Interfaces
 {
     public interface IHeroRepository
     {

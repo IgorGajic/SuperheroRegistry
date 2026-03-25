@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SuperheroRegistry.Application.Interfaces;
+using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Infrastructure.Persistence;
 
@@ -31,7 +32,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
 
         /// <summary>
-        /// Checks if a hero with the given codename already exists (case-insensitive).
+        /// Checks if a hero with the given codename already exists
         /// </summary>
         /// <param name="codename">The codename to check.</param>
         /// <returns>True if codename exists, false otherwise.</returns>

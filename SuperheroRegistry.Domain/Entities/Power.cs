@@ -11,6 +11,9 @@
         public Hero Hero { get; set; } = null!;
         public Power(string name, string description, int heroId, Hero hero)
         {
+            if(hero.Id != heroId)
+                throw new ArgumentException("Hero ID does not match the provided hero entity.");
+
             Name = name;
             Description = description;
             HeroId = heroId;
