@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Enums;
+using SuperheroRegistry.Infrastructure.Persistence;
 
 namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 {
@@ -37,7 +38,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         public async Task<bool> CodenameExistsAsync(string codename)
         {
             return await _appDbContext.Heroes
-                .AnyAsync(h => h.Codename.ToLower() == codename.ToLower());    
+                .AnyAsync(h => h.Codename == codename);    
         }
 
         /// <summary>

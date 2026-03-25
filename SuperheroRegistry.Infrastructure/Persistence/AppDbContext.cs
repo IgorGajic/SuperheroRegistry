@@ -7,8 +7,8 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<Hero> Heroes { get; set; }
-    public DbSet<Power> Powers { get; set; }
+    public DbSet<Hero> Heroes { get; set; } = null!;
+    public DbSet<Power> Powers { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

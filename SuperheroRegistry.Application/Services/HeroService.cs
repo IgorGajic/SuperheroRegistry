@@ -45,10 +45,10 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="ArgumentException">If race or alignment enum values are invalid.</exception>
         public async Task<HeroDto> CreateAsync(CreateHeroDto dto, int userId)
         {
-            if (!Enum.TryParse<Race>(dto.Race, out var race))
+            if (!Enum.TryParse<Race>(dto.Race, ignoreCase:true, out var race))
                 throw new ArgumentException($"Invalid race: {dto.Race}");
 
-            if (!Enum.TryParse<Alignment>(dto.Alignment, out var alignment))
+            if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase:true, out var alignment))
                 throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
 
             var hero = new Hero(dto.Codename, dto.OriginStory, race, alignment);
@@ -143,7 +143,11 @@ namespace SuperheroRegistry.Application.Services
             var hero = await _heroRepository.GetByIdAsync(heroId)
                        ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
 
-            hero.RemovePower(powerId);
+            var removed = hero.RemovePower(powerId);
+            if (!removed)
+            {
+                throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
+            }
             await _heroRepository.UpdateAsync(hero);
         }
 
