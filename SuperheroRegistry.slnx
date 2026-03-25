@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="SuperheroRegistry.Api/SuperheroRegistry.Api.csproj" DisplayName="SuperheroRegistry.API" Id="a470f9ac-3268-4863-98bb-c125467fc5f4" />
+  <Project Path="SuperheroRegistry.Application/SuperheroRegistry.Application.csproj" />
+  <Project Path="SuperheroRegistry.Domain/SuperheroRegistry.Domain.csproj" />
+  <Project Path="SuperheroRegistry.Infrastructure/SuperheroRegistry.Infrastructure.csproj" />
+  <Project Path="SuperheroRegistry.Tests/SuperheroRegistry.Tests.csproj" Id="e830e7dc-4dfa-4fff-9797-b9800c5c20c1" />
+</Solution>
