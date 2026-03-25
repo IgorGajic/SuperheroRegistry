@@ -13,7 +13,6 @@ public class Hero : BaseEntity
     public Alignment Alignment { get; set; }
     public HeroStatus Status { get; private set; }
     public List<Power> Powers { get; set; }
-    private bool _canManagePowers { get; set; }
     private const int MinimumOriginStoryLength = 30;
 
     public Hero(string codename, string originStory, Race race, Alignment alignment)
@@ -25,8 +24,6 @@ public class Hero : BaseEntity
 
         Powers = new List<Power>();
         Status = HeroStatus.Draft;
-
-        _canManagePowers = true;
     }
 
 
@@ -57,21 +54,22 @@ public class Hero : BaseEntity
             throw new DomainException("Only registered heroes can be retired.");
 
         Status = HeroStatus.Retired;
-        _canManagePowers = false;
     }
 
     public void AddPower(Power power)
     {
-        if (!_canManagePowers)
-        {
+        if(power == null)
+            throw new DomainException("Power cannot be null.");
+
+        if (Status == HeroStatus.Retired)
             throw new DomainException("Cannot manage powers for retired heroes.");
-        }
+        
         Powers.Add(power);
     }
 
     public bool RemovePower(int powerId)
     {
-        if (!_canManagePowers)
+        if (Status == HeroStatus.Retired)
         {
             throw new DomainException("Cannot manage powers for retired heroes.");
         }
