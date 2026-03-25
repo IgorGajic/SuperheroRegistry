@@ -28,5 +28,9 @@
             Status = status;
             Powers = powers;
         }
+
+        public HeroDto()
+        {
+        }
     }
 }

@@ -6,14 +6,15 @@ public class Hero : BaseEntity
 {
     private static readonly string[] ForbiddenPhrases =
         ["tragic past", "chosen one", "mysterious organization"];
-
+    private const int MinimumOriginStoryLength = 30;
+    public int UserId { get; set; }
     public string Codename { get; set; }
     public string OriginStory { get; set; }
     public Race Race { get; set; }
     public Alignment Alignment { get; set; }
     public HeroStatus Status { get; private set; }
     public List<Power> Powers { get; set; }
-    private const int MinimumOriginStoryLength = 30;
+
 
     public Hero(string codename, string originStory, Race race, Alignment alignment)
     {

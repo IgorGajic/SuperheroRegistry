@@ -1,42 +1,101 @@
-﻿using SuperheroRegistry.Application.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using SuperheroRegistry.Application.Interfaces;
+using SuperheroRegistry.Domain.Enums;
 
 namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 {
+    /// <summary>
+    /// Handles hero data persistence and retrieval from the database.
+    /// Manages CRUD operations and filtering of hero entities.
+    /// </summary>
     public class HeroRepository : IHeroRepository
     {
-        public Task<Hero> AddAsync(Hero hero)
+        private readonly AppDbContext _appDbContext;
+
+        public HeroRepository(AppDbContext appDbContext)
         {
-            throw new NotImplementedException();
+            _appDbContext = appDbContext;
         }
 
-        public Task<bool> CodenameExistsAsync(string codename)
+        /// <summary>
+        /// Creates and persists a new hero in the database.
+        /// </summary>
+        /// <param name="hero">The hero entity to save.</param>
+        /// <returns>The saved hero with database-generated ID.</returns>
+        public async Task<Hero> AddAsync(Hero hero)
         {
-            throw new NotImplementedException();
+            _appDbContext.Heroes.Add(hero);
+            await _appDbContext.SaveChangesAsync();
+            return hero;
         }
 
-        public Task DeleteAsync(Hero hero)
+        /// <summary>
+        /// Checks if a hero with the given codename already exists (case-insensitive).
+        /// </summary>
+        /// <param name="codename">The codename to check.</param>
+        /// <returns>True if codename exists, false otherwise.</returns>
+        public async Task<bool> CodenameExistsAsync(string codename)
         {
-            throw new NotImplementedException();
+            return await _appDbContext.Heroes
+                .AnyAsync(h => h.Codename.ToLower() == codename.ToLower());    
         }
 
-        public Task<List<Hero>> GetAllAsync()
+        /// <summary>
+        /// Deletes a hero from the database. Associated powers are cascade deleted.
+        /// </summary>
+        /// <param name="hero">The hero to delete.</param>
+        public async Task DeleteAsync(Hero hero)
         {
-            throw new NotImplementedException();
+            _appDbContext.Heroes.Remove(hero);
+            await _appDbContext.SaveChangesAsync();
         }
 
-        public Task<Hero?> GetByIdAsync(int id)
+        /// <summary>
+        /// Retrieves all heroes from the database, including their powers.
+        /// </summary>
+        /// <returns>List of all heroes with loaded powers.</returns>
+        public async Task<List<Hero>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _appDbContext.Heroes
+                .Include(h => h.Powers)
+                .ToListAsync();
         }
 
-        public Task<List<Hero>> GetRegisteredAsync()
+        /// <summary>
+        /// Retrieves a specific hero by ID, including all associated powers.
+        /// </summary>
+        /// <param name="id">The hero ID.</param>
+        /// <returns>The hero with loaded powers, or null if not found.</returns>
+        public async Task<Hero?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await _appDbContext.Heroes
+                .Include(h => h.Powers)
+                .FirstOrDefaultAsync(h => h.Id == id);
         }
 
-        public Task<Hero> UpdateAsync(Hero hero)
+        /// <summary>
+        /// Retrieves all heroes with Registered status, sorted by codename.
+        /// </summary>
+        /// <returns>Sorted list of registered heroes.</returns>
+        public async Task<List<Hero>> GetRegisteredAsync()
         {
-            throw new NotImplementedException();
+            return await _appDbContext.Heroes
+                .Include(h => h.Powers)
+                .Where(h => h.Status == HeroStatus.Registered)
+                .OrderBy(h => h.Codename)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Updates an existing hero in the database.
+        /// </summary>
+        /// <param name="hero">The hero with updated values.</param>
+        /// <returns>The updated hero.</returns>
+        public async Task<Hero> UpdateAsync(Hero hero)
+        {
+            _appDbContext.Heroes.Update(hero);
+            await _appDbContext.SaveChangesAsync();
+            return hero;
         }
     }
 }

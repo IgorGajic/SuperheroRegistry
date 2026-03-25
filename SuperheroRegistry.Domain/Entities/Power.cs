@@ -9,5 +9,13 @@
         //Foreign key heroid
         public int HeroId { get; set; }
         public Hero Hero { get; set; } = null!;
+        public Power(string name, string description, int heroId, Hero hero)
+        {
+            Name = name;
+            Description = description;
+            HeroId = heroId;
+            Hero = hero;
+        }
+      
     }
 }
