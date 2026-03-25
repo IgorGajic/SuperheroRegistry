@@ -1,7 +1,6 @@
 ﻿using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Exceptions;
-
-namespace SuperheroRegistry.Domain.Entities;
+using SuperheroRegistry.Domain.Entities;
 
 public class Hero : BaseEntity
 {
@@ -33,17 +32,20 @@ public class Hero : BaseEntity
 
     public void Register()
     {
+        if(Status != HeroStatus.Draft)
+            throw new DomainException("Only heroes in draft status can be registered.");
+        
         if (string.IsNullOrWhiteSpace(Codename))
             throw new DomainException("Codename is required.");
 
-        if (OriginStory.Length < MinimumOriginStoryLength)
+        if (string.IsNullOrWhiteSpace(OriginStory) || OriginStory.Length < MinimumOriginStoryLength)
             throw new DomainException($"Origin story must be at least '{MinimumOriginStoryLength}' characters.");
 
         foreach (var phrase in ForbiddenPhrases)
             if (OriginStory.Contains(phrase, StringComparison.OrdinalIgnoreCase))
                 throw new DomainException($"Origin story contains forbidden phrase: '{phrase}'.");
 
-        if (Powers.Count == 0)
+        if (Powers == null || Powers.Count == 0)
             throw new DomainException("Hero must have at least one power to be registered.");
 
         Status = HeroStatus.Registered;
@@ -79,11 +81,11 @@ public class Hero : BaseEntity
             throw new DomainException("Registered hero must have at least 1 power.");
         }
 
-        foreach (var power in Powers)
+        for (int i = 0; i < Powers.Count; i++)
         {
-            if(power.Id == powerId)
+            if (Powers[i].Id == powerId)
             {
-                Powers.Remove(power);
+                Powers.RemoveAt(i);
                 return true;
             }
         }
