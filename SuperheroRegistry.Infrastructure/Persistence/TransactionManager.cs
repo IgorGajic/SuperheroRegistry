@@ -21,6 +21,10 @@ public class TransactionManager : ITransactionManager
     /// </summary>
     public async Task BeginAsync()
     {
+        if (_currentTransaction != null)
+        {
+            throw new InvalidOperationException("A database transaction is already in progress. Nested transactions are not supported by TransactionManager.");
+        }
         _currentTransaction = await _dbContext.Database.BeginTransactionAsync();
     }
 

@@ -74,7 +74,7 @@ public class HeroesController : ControllerBase
         var hero = await _heroService.GetByIdAsync(id);
 
         if (hero.UserId != GetUserId())
-            return Forbid("You don't have permission to view this hero.");
+            return StatusCode(403, "You don't have permission to view this hero.");
 
         return Ok(hero);
     }
@@ -103,10 +103,12 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> Register(int id)
     {
-        var hero = await _heroService.RegisterAsync(id);
-
+        var hero = await _heroService.GetByIdAsync(id);
+        
         if (hero.UserId != GetUserId())
             return Forbid("You can only register your own heroes.");
+
+        hero = await _heroService.RegisterAsync(id);
 
         return Ok(hero);
     }
@@ -120,11 +122,12 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> Retire(int id)
     {
-        var hero = await _heroService.RetireAsync(id);
+        var hero = await _heroService.GetByIdAsync(id);
 
         if (hero.UserId != GetUserId())
             return Forbid("You can only retire your own heroes.");
 
+        hero = await _heroService.RetireAsync(id);
         return Ok(hero);
     }
 

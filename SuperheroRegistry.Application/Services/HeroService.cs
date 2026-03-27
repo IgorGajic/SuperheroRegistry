@@ -29,16 +29,17 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="KeyNotFoundException">If the hero does not exist.</exception>
         public async Task<HeroDto> AddPowerAsync(int heroId, CreatePowerDto dto)
         {
-            return await _transactionManager.ExecuteAsync(async () =>
+            var hero = await _transactionManager.ExecuteAsync(async () =>
             {
-                var hero = await _heroRepository.GetByIdAsync(heroId)
+                var h = await _heroRepository.GetByIdAsync(heroId)
                     ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
 
-                var power = new Power(dto.Name, dto.Description, heroId, hero);
-                hero.AddPower(power);
-                await _heroRepository.UpdateAsync(hero);
-                return MapToDto(hero);
+                var power = new Power(dto.Name, dto.Description, heroId, h);
+                h.AddPower(power);
+                await _heroRepository.UpdateAsync(h);
+                return h;
             });
+            return MapToDto(hero);
         }
 
         /// <summary>
@@ -50,7 +51,7 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="ArgumentException">If race or alignment enum values are invalid, or if hero properties are invalid.</exception>
         public async Task<HeroDto> CreateAsync(CreateHeroDto dto, string userId)
         {
-            return await _transactionManager.ExecuteAsync(async () =>
+            var hero = await _transactionManager.ExecuteAsync(async () =>
             {
                 // Validate enums
                 if (!Enum.TryParse<Race>(dto.Race, ignoreCase: true, out var race))
@@ -58,15 +59,12 @@ namespace SuperheroRegistry.Application.Services
 
                 if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase: true, out var alignment))
                     throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
-
-                // Validate hero properties
-                ValidateHeroProperties(dto.Codename, dto.OriginStory);
-
-                var hero = new Hero(dto.Codename, dto.OriginStory, race, alignment, userId);
-
-                var saved = await _heroRepository.AddAsync(hero);
-                return MapToDto(saved);
+               
+                var h = new Hero(dto.Codename, dto.OriginStory, race, alignment, userId);
+                await _heroRepository.AddAsync(h);
+                return h;
             });
+            return MapToDto(hero);
         }
 
         /// <summary>
@@ -146,16 +144,16 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="InvalidOperationException">If hero is not in Draft status or validation fails.</exception>
         public async Task<HeroDto> RegisterAsync(int id)
         {
-            return await _transactionManager.ExecuteAsync(async () =>
+            var hero = await _transactionManager.ExecuteAsync(async () =>
             {
-                var hero = await _heroRepository.GetByIdAsync(id)
+                var h = await _heroRepository.GetByIdAsync(id)
                     ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
 
-                ValidateHeroForRegistration(hero);
-                hero.Register();
-                await _heroRepository.UpdateAsync(hero);
-                return MapToDto(hero);
+                h.Register();
+                await _heroRepository.UpdateAsync(h);
+                return h;
             });
+            return MapToDto(hero);
         }
 
         /// <summary>
@@ -190,15 +188,16 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="DomainException">If the hero is not in Registered status.</exception>
         public async Task<HeroDto> RetireAsync(int id)
         {
-            return await _transactionManager.ExecuteAsync(async () =>
+            var hero = await _transactionManager.ExecuteAsync(async () =>
             {
-                var hero = await _heroRepository.GetByIdAsync(id)
+                var h = await _heroRepository.GetByIdAsync(id)
                     ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
 
-                hero.Retire();
-                await _heroRepository.UpdateAsync(hero);
-                return MapToDto(hero);
+                h.Retire();
+                await _heroRepository.UpdateAsync(h);
+                return h;
             });
+            return MapToDto(hero);
         }
         private static HeroDto MapToDto(Hero hero)
         {
@@ -213,35 +212,6 @@ namespace SuperheroRegistry.Application.Services
                 UserId = hero.UserId,
                 Powers = hero.Powers.Select(p => new PowerDto(p.Id, p.Name, p.Description)).ToList()
             };
-        }
-
-        /// <summary>
-        /// Validates hero properties during creation.
-        /// </summary>
-        /// <param name="codename">The hero's codename.</param>
-        /// <param name="originStory">The hero's origin story.</param>
-        /// <exception cref="ArgumentException">If validation fails.</exception>
-        private static void ValidateHeroProperties(string codename, string originStory)
-        {
-            if (string.IsNullOrWhiteSpace(codename))
-                throw new ArgumentException("Codename is required.");
-
-            if (string.IsNullOrWhiteSpace(originStory))
-                throw new ArgumentException("Origin story is required.");
-        }
-
-        /// <summary>
-        /// Validates hero is ready for registration.
-        /// </summary>
-        /// <param name="hero">The hero to validate.</param>
-        /// <exception cref="InvalidOperationException">If hero cannot be registered.</exception>
-        private static void ValidateHeroForRegistration(Hero hero)
-        {
-            if (hero.Status != HeroStatus.Draft)
-                throw new InvalidOperationException("Only heroes in draft status can be registered.");
-
-            if (hero.Powers == null || hero.Powers.Count == 0)
-                throw new InvalidOperationException("Hero must have at least one power to be registered.");
         }
     }
 }
