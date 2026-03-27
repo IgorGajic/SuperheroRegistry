@@ -59,6 +59,10 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<HeroDto>> GetById(int id)
     {
         var hero = await _heroService.GetByIdAsync(id);
+        
+        if(hero == null)
+            return NotFound();
+
         return Ok(hero);
     }
 

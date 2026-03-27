@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Application.DTOs;
 using SuperheroRegistry.Application.Interfaces;
+using System.Security.Claims;
 
 namespace SuperheroRegistry.API.Controllers;
 
@@ -35,8 +36,17 @@ public class PowersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<HeroDto>> AddPower(int heroId, CreatePowerDto dto)
     {
-        var hero = await _heroService.AddPowerAsync(heroId, dto);
-        return Ok(hero);
+        var hero = await _heroService.GetByIdAsync(heroId);
+
+        if(hero == null)
+            return NotFound();
+
+        var currentUserId = GetUserId();
+        if(hero.UserId != currentUserId)
+            return Forbid();
+
+        var updatedHero = await _heroService.AddPowerAsync(heroId, dto);
+        return Ok(updatedHero);
     }
 
     /// <summary>
@@ -48,7 +58,20 @@ public class PowersController : ControllerBase
     [HttpDelete("{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
+        var hero = await _heroService.GetByIdAsync(heroId);
+
+        if(hero == null)
+            return NotFound();
+
+        var currentUserId = GetUserId();
+        if(hero.UserId != currentUserId)
+            return Forbid();
+
         await _heroService.RemovePowerAsync(heroId, powerId);
         return NoContent();
     }
+
+    private string GetUserId() =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new UnauthorizedAccessException("User not found in token.");
 }
