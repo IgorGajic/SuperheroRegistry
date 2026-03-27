@@ -43,7 +43,7 @@ namespace SuperheroRegistry.Application.Services
         /// <param name="userId">The ID of the user creating the hero.</param>
         /// <returns>The newly created hero DTO.</returns>
         /// <exception cref="ArgumentException">If race or alignment enum values are invalid.</exception>
-        public async Task<HeroDto> CreateAsync(CreateHeroDto dto, int userId)
+        public async Task<HeroDto> CreateAsync(CreateHeroDto dto, string userId)
         {
             if (!Enum.TryParse<Race>(dto.Race, ignoreCase:true, out var race))
                 throw new ArgumentException($"Invalid race: {dto.Race}");
@@ -67,7 +67,7 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="KeyNotFoundException">If the hero does not exist.</exception>
         /// <exception cref="InvalidOperationException">If the hero is not in Draft status.</exception>
         /// <exception cref="UnauthorizedAccessException">If the user is not the hero's owner.</exception>
-        public async Task DeleteAsync(int id, int userId)
+        public async Task DeleteAsync(int id, string userId)
         {
             var hero = await _heroRepository.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
