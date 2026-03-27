@@ -14,5 +14,6 @@ namespace SuperheroRegistry.Application.Interfaces
         Task DeleteAsync(int id, string userId);
         Task<HeroDto> AddPowerAsync(int heroId, CreatePowerDto dto);
         Task RemovePowerAsync(int heroId, int powerId);
+        Task<bool> CodenameExistsAsync(string codename);
     }
 }

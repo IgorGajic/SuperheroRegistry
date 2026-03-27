@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SuperheroRegistry.API.Middleware;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Application.Services;
 using SuperheroRegistry.Infrastructure.Persistence;
@@ -62,11 +63,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // DI
+builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 builder.Services.AddScoped<IHeroRepository, HeroRepository>();
 builder.Services.AddScoped<IHeroService, HeroService>();
 
 // Build
 var app = builder.Build();
+
+// Global exception handler middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Swagger middleware for API documentation in development environment
 if (app.Environment.IsDevelopment())

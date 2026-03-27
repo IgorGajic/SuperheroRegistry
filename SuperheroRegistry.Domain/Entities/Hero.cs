@@ -31,11 +31,8 @@ namespace SuperheroRegistry.Domain.Entities
 
     public void Register()
     {
-        if(Status != HeroStatus.Draft)
-            throw new DomainException("Only heroes in draft status can be registered.");
-        
-        if (string.IsNullOrWhiteSpace(Codename))
-            throw new DomainException("Codename is required.");
+        // Validations are performed in HeroService.ValidateHeroForRegistration
+        // Here we just perform the state transition and forbidden phrase check
 
         if (string.IsNullOrWhiteSpace(OriginStory) || OriginStory.Length < MinimumOriginStoryLength)
             throw new DomainException($"Origin story must be at least '{MinimumOriginStoryLength}' characters.");
@@ -43,9 +40,6 @@ namespace SuperheroRegistry.Domain.Entities
         foreach (var phrase in ForbiddenPhrases)
             if (OriginStory.Contains(phrase, StringComparison.OrdinalIgnoreCase))
                 throw new DomainException($"Origin story contains forbidden phrase: '{phrase}'.");
-
-        if (Powers == null || Powers.Count == 0)
-            throw new DomainException("Hero must have at least one power to be registered.");
 
         Status = HeroStatus.Registered;
     }
@@ -76,20 +70,17 @@ namespace SuperheroRegistry.Domain.Entities
             throw new DomainException("Cannot manage powers for retired heroes.");
         }
 
-        if(Powers.Count == 1 && Status == HeroStatus.Registered)
+        if (Powers.Count == 1 && Status == HeroStatus.Registered)
         {
             throw new DomainException("Registered hero must have at least 1 power.");
         }
 
-        for (int i = 0; i < Powers.Count; i++)
-        {
-            if (Powers[i].Id == powerId)
-            {
-                Powers.RemoveAt(i);
-                return true;
-            }
-        }
-        return false;
+        var power = Powers.FirstOrDefault(p => p.Id == powerId);
+        if (power == null)
+            return false;
+
+        Powers.Remove(power);
+        return true;
     }
 }
 }

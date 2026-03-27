@@ -36,20 +36,13 @@ public class PowersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<HeroDto>> AddPower(int heroId, CreatePowerDto dto)
     {
-        try
-        {
-            var hero = await _heroService.GetByIdAsync(heroId);
+        var hero = await _heroService.GetByIdAsync(heroId);
 
-            if (hero.UserId != GetUserId())
-                return Forbid();
-        
-            var updatedHero = await _heroService.AddPowerAsync(heroId, dto);
-            return Ok(updatedHero);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        if (hero.UserId != GetUserId())
+            return Forbid("You can only add powers to your own heroes.");
+
+        var updatedHero = await _heroService.AddPowerAsync(heroId, dto);
+        return Ok(updatedHero);
     }
 
     /// <summary>
@@ -61,20 +54,13 @@ public class PowersController : ControllerBase
     [HttpDelete("{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
-        try
-        {
-            var hero = await _heroService.GetByIdAsync(heroId);
+        var hero = await _heroService.GetByIdAsync(heroId);
 
-            if (hero.UserId != GetUserId())
-                return Forbid();
+        if (hero.UserId != GetUserId())
+            return Forbid("You can only remove powers from your own heroes.");
 
-            await _heroService.RemovePowerAsync(heroId, powerId);
-            return NoContent();
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        await _heroService.RemovePowerAsync(heroId, powerId);
+        return NoContent();
     }
 
     private string GetUserId() =>
