@@ -58,12 +58,19 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> GetById(int id)
     {
-        var hero = await _heroService.GetByIdAsync(id);
-        
-        if(hero == null)
-            return NotFound();
+        try
+        {
+            var hero = await _heroService.GetByIdAsync(id);
 
-        return Ok(hero);
+            if (hero.UserId != GetUserId())
+                return Forbid();
+            
+            return Ok(hero);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
     }
 
     /// <summary>
@@ -91,6 +98,10 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<HeroDto>> Register(int id)
     {
         var hero = await _heroService.RegisterAsync(id);
+        
+        if(hero.UserId != GetUserId())
+            return Forbid();
+
         return Ok(hero);
     }
 
@@ -104,6 +115,10 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<HeroDto>> Retire(int id)
     {
         var hero = await _heroService.RetireAsync(id);
+
+        if (hero.UserId != GetUserId())
+            return Forbid();
+
         return Ok(hero);
     }
 
