@@ -27,7 +27,6 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
             entity.Property(hero => hero.Race).HasConversion<string>();
             entity.Property(hero => hero.Alignment).HasConversion<string>();
 
-            // Foreign key to Identity User table
             entity.HasOne<IdentityUser>()
                   .WithMany()
                   .HasForeignKey(hero => hero.UserId)
