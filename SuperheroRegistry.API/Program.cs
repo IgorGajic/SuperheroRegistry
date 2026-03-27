@@ -13,7 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add controllers to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddOpenApi();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new() { Title = "Superhero Registry API", Version = "v1" });
+});
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>

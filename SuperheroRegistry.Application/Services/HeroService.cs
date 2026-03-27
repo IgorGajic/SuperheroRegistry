@@ -51,9 +51,7 @@ namespace SuperheroRegistry.Application.Services
             if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase:true, out var alignment))
                 throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
 
-            var hero = new Hero(dto.Codename, dto.OriginStory, race, alignment);
-           
-            hero.UserId = userId;
+            var hero = new Hero(dto.Codename, dto.OriginStory, race, alignment, userId);
 
             var saved = await _heroRepository.AddAsync(hero);
             return MapToDto(saved);

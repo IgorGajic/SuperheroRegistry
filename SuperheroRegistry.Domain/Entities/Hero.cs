@@ -17,13 +17,13 @@ namespace SuperheroRegistry.Domain.Entities
     public List<Power> Powers { get; set; }
 
 
-    public Hero(string codename, string originStory, Race race, Alignment alignment)
+    public Hero(string codename, string originStory, Race race, Alignment alignment, string userId)
     {
         Codename = codename;
         OriginStory = originStory;
         Race = race;
         Alignment = alignment;
-
+        UserId = userId;
         Powers = new List<Power>();
         Status = HeroStatus.Draft;
     }
