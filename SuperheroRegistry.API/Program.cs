@@ -52,6 +52,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Authorization
+builder.Services.AddAuthorization();
+
 // DI
 builder.Services.AddScoped<IHeroRepository, HeroRepository>();
 builder.Services.AddScoped<IHeroService, HeroService>();

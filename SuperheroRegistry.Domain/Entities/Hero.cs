@@ -8,7 +8,7 @@ namespace SuperheroRegistry.Domain.Entities
     private static readonly string[] ForbiddenPhrases =
         ["tragic past", "chosen one", "mysterious organization"];
     private const int MinimumOriginStoryLength = 30;
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     public string Codename { get; set; }
     public string OriginStory { get; set; }
     public Race Race { get; set; }
