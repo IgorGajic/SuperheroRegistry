@@ -3,13 +3,13 @@
     public class PowerDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public PowerDto(string name, string description)
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+
+        public PowerDto()
         {
-            Name = name;
-            Description = description;
         }
+
         public PowerDto(int id, string name, string description)
         {
             Id = id;

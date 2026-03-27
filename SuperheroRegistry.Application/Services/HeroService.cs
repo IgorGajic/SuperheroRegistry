@@ -12,10 +12,12 @@ namespace SuperheroRegistry.Application.Services
     public class HeroService : IHeroService
     {
         private readonly IHeroRepository _heroRepository;
+        private readonly ITransactionManager _transactionManager;
 
-        public HeroService(IHeroRepository heroRepository)
+        public HeroService(IHeroRepository heroRepository, ITransactionManager transactionManager)
         {
             _heroRepository = heroRepository;
+            _transactionManager = transactionManager;
         }
 
         /// <summary>
@@ -27,12 +29,16 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="KeyNotFoundException">If the hero does not exist.</exception>
         public async Task<HeroDto> AddPowerAsync(int heroId, CreatePowerDto dto)
         {
-            var hero = await _heroRepository.GetByIdAsync(heroId)
-                ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
+            var hero = await _transactionManager.ExecuteAsync(async () =>
+            {
+                var h = await _heroRepository.GetByIdAsync(heroId)
+                    ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
 
-            var power = new Power(dto.Name, dto.Description, heroId, hero);
-            hero.AddPower(power);
-            await _heroRepository.UpdateAsync(hero);
+                var power = new Power(dto.Name, dto.Description, heroId, h);
+                h.AddPower(power);
+                await _heroRepository.UpdateAsync(h);
+                return h;
+            });
             return MapToDto(hero);
         }
 
@@ -42,19 +48,23 @@ namespace SuperheroRegistry.Application.Services
         /// <param name="dto">The hero details (codename, origin story, race, alignment).</param>
         /// <param name="userId">The ID of the user creating the hero.</param>
         /// <returns>The newly created hero DTO.</returns>
-        /// <exception cref="ArgumentException">If race or alignment enum values are invalid.</exception>
+        /// <exception cref="ArgumentException">If race or alignment enum values are invalid, or if hero properties are invalid.</exception>
         public async Task<HeroDto> CreateAsync(CreateHeroDto dto, string userId)
         {
-            if (!Enum.TryParse<Race>(dto.Race, ignoreCase:true, out var race))
-                throw new ArgumentException($"Invalid race: {dto.Race}");
+            var hero = await _transactionManager.ExecuteAsync(async () =>
+            {
+                // Validate enums
+                if (!Enum.TryParse<Race>(dto.Race, ignoreCase: true, out var race))
+                    throw new ArgumentException($"Invalid race: {dto.Race}");
 
-            if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase:true, out var alignment))
-                throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
-
-            var hero = new Hero(dto.Codename, dto.OriginStory, race, alignment, userId);
-
-            var saved = await _heroRepository.AddAsync(hero);
-            return MapToDto(saved);
+                if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase: true, out var alignment))
+                    throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
+               
+                var h = new Hero(dto.Codename, dto.OriginStory, race, alignment, userId);
+                await _heroRepository.AddAsync(h);
+                return h;
+            });
+            return MapToDto(hero);
         }
 
         /// <summary>
@@ -67,16 +77,19 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="UnauthorizedAccessException">If the user is not the hero's owner.</exception>
         public async Task DeleteAsync(int id, string userId)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
+            await _transactionManager.ExecuteAsync(async () =>
+            {
+                var hero = await _heroRepository.GetByIdAsync(id)
+                    ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
 
-            if (hero.Status != HeroStatus.Draft)
-                throw new InvalidOperationException("Only draft heroes can be deleted.");
+                if (hero.Status != HeroStatus.Draft)
+                    throw new InvalidOperationException("Only draft heroes can be deleted.");
 
-            if (hero.UserId != userId)
-                throw new UnauthorizedAccessException("You can only delete your own heroes.");
+                if (hero.UserId != userId)
+                    throw new UnauthorizedAccessException("You can only delete your own heroes.");
 
-            await _heroRepository.DeleteAsync(hero);
+                await _heroRepository.DeleteAsync(hero);
+            });
         }
 
         /// <summary>
@@ -113,19 +126,33 @@ namespace SuperheroRegistry.Application.Services
         }
 
         /// <summary>
+        /// Checks if a codename is already in use.
+        /// </summary>
+        /// <param name="codename">The codename to check.</param>
+        /// <returns>True if the codename exists, false otherwise.</returns>
+        public async Task<bool> CodenameExistsAsync(string codename)
+        {
+            return await _heroRepository.CodenameExistsAsync(codename);
+        }
+
+        /// <summary>
         /// Registers a hero for active duty. Validates all business rules before transitioning to Registered status.
         /// </summary>
         /// <param name="id">The hero ID.</param>
         /// <returns>The registered hero DTO.</returns>
         /// <exception cref="KeyNotFoundException">If the hero does not exist.</exception>
-        /// <exception cref="DomainException">If validation fails (thrown by Hero.Register).</exception>
+        /// <exception cref="InvalidOperationException">If hero is not in Draft status or validation fails.</exception>
         public async Task<HeroDto> RegisterAsync(int id)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
+            var hero = await _transactionManager.ExecuteAsync(async () =>
+            {
+                var h = await _heroRepository.GetByIdAsync(id)
+                    ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
 
-            hero.Register();
-            await _heroRepository.UpdateAsync(hero);
+                h.Register();
+                await _heroRepository.UpdateAsync(h);
+                return h;
+            });
             return MapToDto(hero);
         }
 
@@ -138,15 +165,18 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="DomainException">If the removal violates business rules.</exception>
         public async Task RemovePowerAsync(int heroId, int powerId)
         {
-            var hero = await _heroRepository.GetByIdAsync(heroId)
-                       ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
-
-            var removed = hero.RemovePower(powerId);
-            if (!removed)
+            await _transactionManager.ExecuteAsync(async () =>
             {
-                throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
-            }
-            await _heroRepository.UpdateAsync(hero);
+                var hero = await _heroRepository.GetByIdAsync(heroId)
+                           ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
+
+                var removed = hero.RemovePower(powerId);
+                if (!removed)
+                {
+                    throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
+                }
+                await _heroRepository.UpdateAsync(hero);
+            });
         }
 
         /// <summary>
@@ -158,11 +188,15 @@ namespace SuperheroRegistry.Application.Services
         /// <exception cref="DomainException">If the hero is not in Registered status.</exception>
         public async Task<HeroDto> RetireAsync(int id)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
+            var hero = await _transactionManager.ExecuteAsync(async () =>
+            {
+                var h = await _heroRepository.GetByIdAsync(id)
+                    ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
 
-            hero.Retire();
-            await _heroRepository.UpdateAsync(hero);
+                h.Retire();
+                await _heroRepository.UpdateAsync(h);
+                return h;
+            });
             return MapToDto(hero);
         }
         private static HeroDto MapToDto(Hero hero)
@@ -175,6 +209,7 @@ namespace SuperheroRegistry.Application.Services
                 Race = hero.Race.ToString(),
                 Alignment = hero.Alignment.ToString(),
                 Status = hero.Status.ToString(),
+                UserId = hero.UserId,
                 Powers = hero.Powers.Select(p => new PowerDto(p.Id, p.Name, p.Description)).ToList()
             };
         }

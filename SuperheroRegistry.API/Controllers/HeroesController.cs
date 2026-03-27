@@ -38,6 +38,19 @@ public class HeroesController : ControllerBase
     }
 
     /// <summary>
+    /// Checks if a codename is already in use.
+    /// </summary>
+    /// <param name="codename">The codename to check.</param>
+    /// <returns>True if the codename exists, false otherwise.</returns>
+    [HttpGet("exists/{codename}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<bool>> CodenameExists(string codename)
+    {
+        var exists = await _heroService.CodenameExistsAsync(codename);
+        return Ok(exists);
+    }
+
+    /// <summary>
     /// Retrieves all heroes (public and private) with authorization.
     /// </summary>
     /// <returns>A list of all hero DTOs.</returns>
@@ -58,19 +71,12 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> GetById(int id)
     {
-        try
-        {
-            var hero = await _heroService.GetByIdAsync(id);
+        var hero = await _heroService.GetByIdAsync(id);
 
-            if (hero.UserId != GetUserId())
-                return Forbid();
-            
-            return Ok(hero);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        if (hero.UserId != GetUserId())
+            return StatusCode(403, "You don't have permission to view this hero.");
+
+        return Ok(hero);
     }
 
     /// <summary>
@@ -97,10 +103,12 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> Register(int id)
     {
-        var hero = await _heroService.RegisterAsync(id);
+        var hero = await _heroService.GetByIdAsync(id);
         
-        if(hero.UserId != GetUserId())
-            return Forbid();
+        if (hero.UserId != GetUserId())
+            return Forbid("You can only register your own heroes.");
+
+        hero = await _heroService.RegisterAsync(id);
 
         return Ok(hero);
     }
@@ -114,11 +122,12 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<HeroDto>> Retire(int id)
     {
-        var hero = await _heroService.RetireAsync(id);
+        var hero = await _heroService.GetByIdAsync(id);
 
         if (hero.UserId != GetUserId())
-            return Forbid();
+            return Forbid("You can only retire your own heroes.");
 
+        hero = await _heroService.RetireAsync(id);
         return Ok(hero);
     }
 
