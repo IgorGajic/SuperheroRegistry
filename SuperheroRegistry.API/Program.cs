@@ -11,6 +11,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(o =>
+    o.AddDefaultPolicy(p => p
+        .WithOrigins("http://localhost:4200")
+        .AllowAnyHeader().AllowAnyMethod()));
+
+
 // Add controllers to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -69,6 +75,9 @@ builder.Services.AddScoped<IHeroService, HeroService>();
 
 // Build
 var app = builder.Build();
+
+// Cors
+app.UseCors(); 
 
 // Global exception handler middleware
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();

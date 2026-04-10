@@ -8,7 +8,9 @@ namespace SuperheroRegistry.Application.Interfaces
         Task<List<HeroDto>> GetAllAsync();
         Task<List<HeroDto>> GetRegisteredAsync();
         Task<HeroDto> GetByIdAsync(int id);
+        Task<List<HeroDto>> GetByUserIdAsync(string userId);
         Task<HeroDto> CreateAsync(CreateHeroDto dto, string userId);
+        Task<HeroDto> UpdateAsync(int id, CreateHeroDto dto, string userId);
         Task<HeroDto> RegisterAsync(int id);
         Task<HeroDto> RetireAsync(int id);
         Task DeleteAsync(int id, string userId);

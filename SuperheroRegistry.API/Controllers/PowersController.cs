@@ -39,7 +39,7 @@ public class PowersController : ControllerBase
         var hero = await _heroService.GetByIdAsync(heroId);
 
         if (hero.UserId != GetUserId())
-            return Forbid("You can only add powers to your own heroes.");
+            return StatusCode(403, "You can only add powers to your own heroes.");
 
         var updatedHero = await _heroService.AddPowerAsync(heroId, dto);
         return Ok(updatedHero);
