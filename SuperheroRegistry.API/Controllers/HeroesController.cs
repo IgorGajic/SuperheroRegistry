@@ -63,6 +63,19 @@ public class HeroesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all heroes created by the logged-in user with authorization.
+    /// </summary>
+    /// <returns>A list of hero DTOs belonging to the current user.</returns>
+    [HttpGet("my-heroes")]
+    [Authorize]
+    public async Task<ActionResult<List<HeroDto>>> GetMyHeroes()
+    {
+        var userId = GetUserId();
+        var heroes = await _heroService.GetByUserIdAsync(userId);
+        return Ok(heroes);
+    }
+
+    /// <summary>
     /// Retrieves a specific hero by ID with authorization.
     /// </summary>
     /// <param name="id">The ID of the hero to retrieve.</param>
@@ -95,6 +108,22 @@ public class HeroesController : ControllerBase
     }
 
     /// <summary>
+    /// Updates an existing hero's properties with authorization.
+    /// Only the hero's owner can update the hero.
+    /// </summary>
+    /// <param name="id">The ID of the hero to update.</param>
+    /// <param name="dto">The updated hero data (codename, origin story, race, alignment).</param>
+    /// <returns>The updated hero DTO.</returns>
+    [HttpPatch("{id}")]
+    [Authorize]
+    public async Task<ActionResult<HeroDto>> Update(int id, CreateHeroDto dto)
+    {
+        var userId = GetUserId();
+        var hero = await _heroService.UpdateAsync(id, dto, userId);
+        return Ok(hero);
+    }
+
+    /// <summary>
     /// Registers a hero, making them publicly visible with authorization.
     /// </summary>
     /// <param name="id">The ID of the hero to register.</param>
@@ -104,7 +133,7 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<HeroDto>> Register(int id)
     {
         var hero = await _heroService.GetByIdAsync(id);
-        
+
         if (hero.UserId != GetUserId())
             return Forbid("You can only register your own heroes.");
 

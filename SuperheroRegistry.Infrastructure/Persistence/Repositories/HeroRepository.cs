@@ -90,6 +90,20 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
 
         /// <summary>
+        /// Retrieves all heroes created by a specific user, including their powers.
+        /// </summary>
+        /// <param name="userId">The user ID to filter by.</param>
+        /// <returns>List of heroes belonging to the user.</returns>
+        public async Task<List<Hero>> GetByUserIdAsync(string userId)
+        {
+            return await _appDbContext.Heroes
+                .Include(h => h.Powers)
+                .Where(h => h.UserId == userId)
+                .OrderBy(h => h.Codename)
+                .ToListAsync();
+        }
+
+        /// <summary>
         /// Updates an existing hero in the database.
         /// Note: Changes are not saved until the transaction is committed.
         /// </summary>

@@ -126,6 +126,17 @@ namespace SuperheroRegistry.Application.Services
         }
 
         /// <summary>
+        /// Retrieves all heroes created by a specific user.
+        /// </summary>
+        /// <param name="userId">The user ID to filter by.</param>
+        /// <returns>List of hero DTOs belonging to the user.</returns>
+        public async Task<List<HeroDto>> GetByUserIdAsync(string userId)
+        {
+            var heroes = await _heroRepository.GetByUserIdAsync(userId);
+            return heroes.Select(MapToDto).ToList();
+        }
+
+        /// <summary>
         /// Checks if a codename is already in use.
         /// </summary>
         /// <param name="codename">The codename to check.</param>
@@ -177,6 +188,45 @@ namespace SuperheroRegistry.Application.Services
                 }
                 await _heroRepository.UpdateAsync(hero);
             });
+        }
+
+        /// <summary>
+        /// Updates an existing hero's properties.
+        /// </summary>
+        /// <param name="id">The hero ID.</param>
+        /// <param name="dto">The updated hero details (codename, origin story, race, alignment).</param>
+        /// <param name="userId">The user ID (for authorization check).</param>
+        /// <returns>The updated hero DTO.</returns>
+        /// <exception cref="KeyNotFoundException">If the hero does not exist.</exception>
+        /// <exception cref="UnauthorizedAccessException">If the user is not the hero's owner.</exception>
+        /// <exception cref="ArgumentException">If race or alignment enum values are invalid.</exception>
+        public async Task<HeroDto> UpdateAsync(int id, CreateHeroDto dto, string userId)
+        {
+            var hero = await _transactionManager.ExecuteAsync(async () =>
+            {
+                var h = await _heroRepository.GetByIdAsync(id)
+                    ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
+
+                if (h.UserId != userId)
+                    throw new UnauthorizedAccessException("You can only update your own heroes.");
+
+                // Validate enums
+                if (!Enum.TryParse<Race>(dto.Race, ignoreCase: true, out var race))
+                    throw new ArgumentException($"Invalid race: {dto.Race}");
+
+                if (!Enum.TryParse<Alignment>(dto.Alignment, ignoreCase: true, out var alignment))
+                    throw new ArgumentException($"Invalid alignment: {dto.Alignment}");
+
+                // Update properties
+                h.Codename = dto.Codename;
+                h.OriginStory = dto.OriginStory;
+                h.Race = race;
+                h.Alignment = alignment;
+
+                await _heroRepository.UpdateAsync(h);
+                return h;
+            });
+            return MapToDto(hero);
         }
 
         /// <summary>
