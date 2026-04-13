@@ -1,20 +1,21 @@
 ﻿
-using SuperheroRegistry.Application.DTOs;
+using SuperheroRegistry.Domain.Entities;
+using SuperheroRegistry.Domain.Model;
 
 namespace SuperheroRegistry.Application.Interfaces
 {
     public interface IHeroService
     {
-        Task<List<HeroDto>> GetAllAsync();
-        Task<List<HeroDto>> GetRegisteredAsync();
-        Task<HeroDto> GetByIdAsync(int id);
-        Task<List<HeroDto>> GetByUserIdAsync(string userId);
-        Task<HeroDto> CreateAsync(CreateHeroDto dto, string userId);
-        Task<HeroDto> UpdateAsync(int id, CreateHeroDto dto, string userId);
-        Task<HeroDto> RegisterAsync(int id);
-        Task<HeroDto> RetireAsync(int id);
+        Task<List<Hero>> GetAllAsync();
+        Task<List<Hero>> GetRegisteredAsync();
+        Task<Hero> GetByIdAsync(int id);
+        Task<List<Hero>> GetByUserIdAsync(string userId);
+        Task<Hero> CreateAsync(CreateHero createHero);
+        Task<Hero> UpdateAsync(UpdateHero updateHero);
+        Task<Hero> RegisterAsync(int id, string userId);
+        Task<Hero> RetireAsync(int id, string userId);
         Task DeleteAsync(int id, string userId);
-        Task<HeroDto> AddPowerAsync(int heroId, CreatePowerDto dto);
+        Task<Hero> AddPowerAsync(CreatePower createPower);
         Task RemovePowerAsync(int heroId, int powerId);
         Task<bool> CodenameExistsAsync(string codename);
     }
