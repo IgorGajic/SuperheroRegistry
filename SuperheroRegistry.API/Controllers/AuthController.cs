@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using SuperheroRegistry.Application.DTOs.AuthDtos;
+using SuperheroRegistry.Api.Model.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -31,16 +31,16 @@ public class AuthController : ControllerBase
     /// <param name="dto">The registration details (username and password).</param>
     /// <returns>A JWT token and username on success, or validation errors on failure.</returns>
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
+    public async Task<ActionResult<AuthResponse>> Register(RegisterModel registerModel)
     {
-        var user = new IdentityUser { UserName = dto.Username };
-        var result = await _userManager.CreateAsync(user, dto.Password);
+        var user = new IdentityUser { UserName = registerModel.Username };
+        var result = await _userManager.CreateAsync(user, registerModel.Password);
 
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
         var token = GenerateToken(user);
-        return Ok(new AuthResponseDto { Token = token, Username = user.UserName! });
+        return Ok(new AuthResponse { Token = token, Username = user.UserName! });
     }
 
     /// <summary>
@@ -49,14 +49,14 @@ public class AuthController : ControllerBase
     /// <param name="dto">The login details (username and password).</param>
     /// <returns>A JWT token and username on success, or 401 Unauthorized if credentials are invalid.</returns>
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
+    public async Task<ActionResult<AuthResponse>> Login(LoginModel loginModel)
     {
-        var user = await _userManager.FindByNameAsync(dto.Username);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+        var user = await _userManager.FindByNameAsync(loginModel.Username);
+        if (user == null || !await _userManager.CheckPasswordAsync(user, loginModel.Password))
             return Unauthorized("Invalid username or password.");
 
         var token = GenerateToken(user);
-        return Ok(new AuthResponseDto { Token = token, Username = user.UserName! });
+        return Ok(new AuthResponse { Token = token, Username = user.UserName! });
     }
 
     /// <summary>
