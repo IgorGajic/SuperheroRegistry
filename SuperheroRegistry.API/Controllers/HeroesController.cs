@@ -5,7 +5,6 @@ using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Model;
-using System.Security.Claims;
 
 namespace SuperheroRegistry.API.Controllers;
 
@@ -14,10 +13,12 @@ namespace SuperheroRegistry.API.Controllers;
 public class HeroesController : ControllerBase
 {
     private readonly IHeroService _heroService;
+    private readonly IAuthenticationService _authenticationService;
 
-    public HeroesController(IHeroService heroService)
+    public HeroesController(IHeroService heroService, IAuthenticationService authenticationService)
     {
         _heroService = heroService;
+        _authenticationService = authenticationService;
     }
 
     [HttpGet("public")]
@@ -51,7 +52,7 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<Hero>>> GetMyHeroes()
     {
-        var userId = GetUserId();
+        var userId = _authenticationService.GetUserIdFromClaims(User);
         var heroes = await _heroService.GetByUserIdAsync(userId);
         return Ok(heroes);
     }
@@ -60,9 +61,10 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<Hero>> GetById(int id)
     {
+        var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.GetByIdAsync(id);
 
-        if (hero.UserId != GetUserId())
+        if (hero.UserId != userId)
             return StatusCode(403, "You don't have permission to view this hero.");
 
         return Ok(hero);
@@ -70,7 +72,7 @@ public class HeroesController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<CreateHeroModel>> Create(CreateHeroModel createHeroModel)
+    public async Task<ActionResult<Hero>> Create(CreateHeroModel createHeroModel)
     {
         if (!Enum.TryParse<Race>(createHeroModel.Race, ignoreCase: true, out var race))
             throw new ArgumentException($"Invalid race: {createHeroModel.Race}");
@@ -91,7 +93,7 @@ public class HeroesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = hero.Id }, hero);
     }
 
-    [HttpPatch("{id}")]
+    [HttpPatch]
     [Authorize]
     public async Task<ActionResult<UpdateHeroModel>> Update(UpdateHeroModel updateHeroModel)
     {
@@ -117,7 +119,8 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<Hero>> Register(int id)
     {
-        var hero = await _heroService.RegisterAsync(id, GetUserId());
+        var userId = _authenticationService.GetUserIdFromClaims(User);
+        var hero = await _heroService.RegisterAsync(id, userId);
         return Ok(hero);
     }
 
@@ -125,7 +128,8 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<Hero>> Retire(int id)
     {
-        var hero = await _heroService.RetireAsync(id, GetUserId());
+        var userId = _authenticationService.GetUserIdFromClaims(User);
+        var hero = await _heroService.RetireAsync(id, userId);
         return Ok(hero);
     }
 
@@ -133,16 +137,8 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
-        await _heroService.DeleteAsync(id, GetUserId());
+        var userId = _authenticationService.GetUserIdFromClaims(User);
+        await _heroService.DeleteAsync(id, userId);
         return NoContent();
     }
-
-    /// <summary>
-    /// Retrieves the current authenticated user's ID from the JWT token claims.
-    /// </summary>
-    /// <returns>The user ID.</returns>
-    /// <exception cref="UnauthorizedAccessException">Thrown when the user ID cannot be found in the token.</exception>
-    private string GetUserId() =>
-        User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new UnauthorizedAccessException("User not found in token.");
 }

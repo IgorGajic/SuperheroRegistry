@@ -1,6 +1,6 @@
 ﻿namespace SuperheroRegistry.Application
 {
-    public class HeroConstants
+    public static class HeroConstants
     {
         public static readonly string[] ForbiddenPhrases =
         ["tragic past", "chosen one", "mysterious organization"];
