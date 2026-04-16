@@ -97,11 +97,17 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UpdateHeroModel>> Update(UpdateHeroModel updateHeroModel)
     {
+        var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId != updateHeroModel.UserId)
+            return StatusCode(403, "You don't have permission to update this hero.");
+
         if (!Enum.TryParse<Race>(updateHeroModel.Race, ignoreCase: true, out var race))
             throw new ArgumentException($"Invalid race: {updateHeroModel.Race}");
 
         if (!Enum.TryParse<Alignment>(updateHeroModel.Alignment, ignoreCase: true, out var alignment))
             throw new ArgumentException($"Invalid alignment: {updateHeroModel.Alignment}");
+       
+        
         var updateHero = new UpdateHero
         {
             Id = updateHeroModel.Id,

@@ -12,7 +12,7 @@ namespace SuperheroRegistry.API.Controllers;
 /// </summary>
 [ApiController]
 [Authorize]
-[Route("api/heroes/{heroId}/powers")]
+[Route("api/heroes/")]
 public class PowersController : ControllerBase
 {
     private readonly IHeroService _heroService;
@@ -24,10 +24,10 @@ public class PowersController : ControllerBase
         _authenticationService = authenticationService;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Hero>> AddPower(CreatePowerModel createPowerModel)
+    [HttpPost("{heroId}/powers")]
+    public async Task<ActionResult<Hero>> AddPower(int heroId, CreatePowerModel createPowerModel)
     {
-        var hero = await _heroService.GetByIdAsync(createPowerModel.HeroId);
+        var hero = await _heroService.GetByIdAsync(heroId);
         var userId = _authenticationService.GetUserIdFromClaims(User);
         
         if (hero.UserId != userId)
@@ -35,7 +35,7 @@ public class PowersController : ControllerBase
 
         var createPower = new CreatePower
         {
-            HeroId = createPowerModel.HeroId,
+            HeroId = heroId,
             Name = createPowerModel.Name,
             Description = createPowerModel.Description
         };
@@ -44,7 +44,7 @@ public class PowersController : ControllerBase
         return Ok(updatedHero);
     }
    
-    [HttpDelete("{powerId}")]
+    [HttpDelete("{heroId}/powers/{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);

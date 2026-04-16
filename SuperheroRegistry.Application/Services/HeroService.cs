@@ -144,6 +144,8 @@ namespace SuperheroRegistry.Application.Services
 
             var power = hero.Powers.FirstOrDefault(p => p.Id == powerId) 
                 ?? throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
+           
+            hero.Powers.Remove(power);
             await _heroRepository.UpdateAsync(hero);
         }
 
