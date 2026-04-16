@@ -1,69 +1,59 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SuperheroRegistry.Application.DTOs;
+using SuperheroRegistry.Api.Model;
 using SuperheroRegistry.Application.Interfaces;
-using System.Security.Claims;
+using SuperheroRegistry.Domain.Entities;
+using SuperheroRegistry.Domain.Model;
 
 namespace SuperheroRegistry.API.Controllers;
 
 /// <summary>
-/// Controller for managing superhero powers.
-/// Provides endpoints for adding and removing powers from heroes.
 /// All endpoints require authorization.
 /// </summary>
 [ApiController]
 [Authorize]
-[Route("api/heroes/{heroId}/powers")]
+[Route("api/heroes/")]
 public class PowersController : ControllerBase
 {
     private readonly IHeroService _heroService;
+    private readonly IAuthenticationService _authenticationService;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PowersController"/> class.
-    /// </summary>
-    /// <param name="heroService">The hero service for managing hero operations.</param>
-    public PowersController(IHeroService heroService)
+    public PowersController(IHeroService heroService, IAuthenticationService authenticationService)
     {
         _heroService = heroService;
+        _authenticationService = authenticationService;
     }
 
-    /// <summary>
-    /// Adds a power to a specific hero with authorization.
-    /// </summary>
-    /// <param name="heroId">The ID of the hero to add the power to.</param>
-    /// <param name="dto">The data transfer object containing power creation information.</param>
-    /// <returns>The updated hero DTO with the new power added.</returns>
-    [HttpPost]
-    public async Task<ActionResult<HeroDto>> AddPower(int heroId, CreatePowerDto dto)
+    [HttpPost("{heroId}/powers")]
+    public async Task<ActionResult<Hero>> AddPower(int heroId, CreatePowerModel createPowerModel)
     {
         var hero = await _heroService.GetByIdAsync(heroId);
-
-        if (hero.UserId != GetUserId())
+        var userId = _authenticationService.GetUserIdFromClaims(User);
+        
+        if (hero.UserId != userId)
             return StatusCode(403, "You can only add powers to your own heroes.");
 
-        var updatedHero = await _heroService.AddPowerAsync(heroId, dto);
+        var createPower = new CreatePower
+        {
+            HeroId = heroId,
+            Name = createPowerModel.Name,
+            Description = createPowerModel.Description
+        };
+
+        var updatedHero = await _heroService.AddPowerAsync(createPower);
         return Ok(updatedHero);
     }
-
-    /// <summary>
-    /// Removes a power from a specific hero with authorization.
-    /// </summary>
-    /// <param name="heroId">The ID of the hero to remove the power from.</param>
-    /// <param name="powerId">The ID of the power to remove.</param>
-    /// <returns>A 204 No Content response on successful removal.</returns>
-    [HttpDelete("{powerId}")]
+   
+    [HttpDelete("{heroId}/powers/{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
+        var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.GetByIdAsync(heroId);
 
-        if (hero.UserId != GetUserId())
+        if (hero.UserId != userId)
             return Forbid("You can only remove powers from your own heroes.");
 
         await _heroService.RemovePowerAsync(heroId, powerId);
         return NoContent();
     }
-
-    private string GetUserId() =>
-        User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new UnauthorizedAccessException("User not found in token.");
 }

@@ -72,6 +72,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITransactionManager, TransactionManager>();
 builder.Services.AddScoped<IHeroRepository, HeroRepository>();
 builder.Services.AddScoped<IHeroService, HeroService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Build
 var app = builder.Build();

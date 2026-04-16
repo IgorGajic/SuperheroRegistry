@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SuperheroRegistry.Application.DTOs
+namespace SuperheroRegistry.Api.Model
 {
-    public class CreateHeroDto
+    public class CreateHeroModel
     {
+        [Required]
+        public string UserId { get; set; }
+
         [Required(ErrorMessage = "Codename is required.")]
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Codename must be between 3 and 100 characters.")]
         public string Codename { get; set; }
@@ -18,7 +21,7 @@ namespace SuperheroRegistry.Application.DTOs
         [Required(ErrorMessage = "Alignment is required.")]
         public string Alignment { get; set; }
 
-        public CreateHeroDto(string codename, string originStory, string race, string alignment)
+        public CreateHeroModel(string codename, string originStory, string race, string alignment)
         {
             Codename = codename;
             OriginStory = originStory;
@@ -26,7 +29,7 @@ namespace SuperheroRegistry.Application.DTOs
             Alignment = alignment;
         }
 
-        public CreateHeroDto()
+        public CreateHeroModel()
         {
         }
     }
