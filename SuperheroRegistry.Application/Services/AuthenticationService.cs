@@ -5,7 +5,6 @@ using SuperheroRegistry.Application.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text;
 
 namespace SuperheroRegistry.Application.Services;
 

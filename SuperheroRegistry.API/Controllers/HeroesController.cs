@@ -95,7 +95,7 @@ public class HeroesController : ControllerBase
 
     [HttpPatch]
     [Authorize]
-    public async Task<ActionResult<UpdateHeroModel>> Update(UpdateHeroModel updateHeroModel)
+    public async Task<ActionResult<Hero>> Update(UpdateHeroModel updateHeroModel)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         if(userId != updateHeroModel.UserId)
