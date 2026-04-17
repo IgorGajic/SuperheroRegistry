@@ -21,14 +21,14 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         /// <summary>
         /// Creates and persists a new hero in the database.
-        /// Note: Changes are not saved until the transaction is committed.
         /// </summary>
         /// <param name="hero">The hero entity to save.</param>
-        /// <returns>The hero to be saved (not yet persisted to database).</returns>
+        /// <returns>The hero persisted to database.</returns>
         public async Task<Hero> AddAsync(Hero hero)
         {
             _appDbContext.Heroes.Add(hero);
-            return await Task.FromResult(hero);
+            await _appDbContext.SaveChangesAsync();
+            return hero;
         }
 
         /// <summary>
@@ -44,13 +44,12 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         /// <summary>
         /// Deletes a hero from the database. Associated powers are cascade deleted.
-        /// Note: Changes are not saved until the transaction is committed.
         /// </summary>
         /// <param name="hero">The hero to delete.</param>
         public async Task DeleteAsync(Hero hero)
         {
             _appDbContext.Heroes.Remove(hero);
-            await Task.CompletedTask;
+            await _appDbContext.SaveChangesAsync();
         }
 
         /// <summary>
@@ -105,14 +104,14 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         /// <summary>
         /// Updates an existing hero in the database.
-        /// Note: Changes are not saved until the transaction is committed.
         /// </summary>
         /// <param name="hero">The hero with updated values.</param>
-        /// <returns>The updated hero (not yet persisted to database).</returns>
+        /// <returns>The updated hero persisted to database.</returns>
         public async Task<Hero> UpdateAsync(Hero hero)
         {
             _appDbContext.Heroes.Update(hero);
-            return await Task.FromResult(hero);
+            await _appDbContext.SaveChangesAsync();
+            return hero;
         }
     }
 }

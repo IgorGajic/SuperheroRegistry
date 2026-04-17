@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SuperheroRegistry.Api.Model;
+using SuperheroRegistry.Api.Model.RequestModels;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Model;
@@ -49,6 +49,9 @@ public class PowersController : ControllerBase
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.GetByIdAsync(heroId);
+
+        if (hero == null)
+                return NotFound($"Hero with ID {heroId} not found.");
 
         if (hero.UserId != userId)
             return Forbid("You can only remove powers from your own heroes.");

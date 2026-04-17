@@ -1,4 +1,6 @@
-﻿namespace SuperheroRegistry.Domain.Entities
+﻿using System.Text.Json.Serialization;
+
+namespace SuperheroRegistry.Domain.Entities
 {
     public class Power
     {
@@ -8,6 +10,8 @@
 
         //Foreign key: HeroId
         public int HeroId { get; set; }
+
+        [JsonIgnore]
         public Hero Hero { get; set; } = null!;
         public Power(string name, string description, int heroId, Hero hero)
         {

@@ -1,12 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SuperheroRegistry.Api.Model
+namespace SuperheroRegistry.Api.Model.RequestModels
 {
-    public class UpdateHeroModel
+    public class CreateHeroModel
     {
-        [Required]
-        public int Id { get; set; }
-
         [Required]
         public string UserId { get; set; }
 
@@ -24,16 +21,15 @@ namespace SuperheroRegistry.Api.Model
         [Required(ErrorMessage = "Alignment is required.")]
         public string Alignment { get; set; }
 
-        public UpdateHeroModel(int id, string codename, string originStory, string race, string alignment)
+        public CreateHeroModel(string codename, string originStory, string race, string alignment)
         {
-            Id = id;
             Codename = codename;
             OriginStory = originStory;
             Race = race;
             Alignment = alignment;
         }
 
-        public UpdateHeroModel()    
+        public CreateHeroModel()
         {
         }
     }
