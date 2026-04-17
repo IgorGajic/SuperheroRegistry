@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SuperheroRegistry.Api.Model;
+using SuperheroRegistry.Api.Model.RequestModels;
+using SuperheroRegistry.Api.Model.ResponseModels;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Enums;
@@ -23,10 +24,21 @@ public class HeroesController : ControllerBase
 
     [HttpGet("public")]
     [AllowAnonymous]
-    public async Task<ActionResult<List<Hero>>> GetRegistered()
+    public async Task<ActionResult<List<HeroResponse>>> GetRegistered()
     {
         var heroes = await _heroService.GetRegisteredAsync();
-        return Ok(heroes);
+        var heroResponses = heroes.Select(hero => new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            Status = hero.Status.ToString(),
+            OriginStory = hero.OriginStory,
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        }).ToList();
+        return Ok(heroResponses);
     }
 
     [HttpGet("exists/{codename}")]
@@ -39,10 +51,21 @@ public class HeroesController : ControllerBase
 
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<List<Hero>>> GetAll()
+    public async Task<ActionResult<List<HeroResponse>>> GetAll()
     {
         var heroes = await _heroService.GetAllAsync();
-        return Ok(heroes);
+        var heroResponses = heroes.Select(hero => new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        }).ToList();
+        return Ok(heroResponses);
     }
 
     /// <summary>
@@ -50,16 +73,27 @@ public class HeroesController : ControllerBase
     /// </summary>
     [HttpGet("my-heroes")]
     [Authorize]
-    public async Task<ActionResult<List<Hero>>> GetMyHeroes()
+    public async Task<ActionResult<List<HeroResponse>>> GetMyHeroes()
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         var heroes = await _heroService.GetByUserIdAsync(userId);
-        return Ok(heroes);
+        var heroResponses = heroes.Select(hero => new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        }).ToList();
+        return Ok(heroResponses);
     }
 
     [HttpGet("{id}")]
     [Authorize]
-    public async Task<ActionResult<Hero>> GetById(int id)
+    public async Task<ActionResult<HeroResponse>> GetById(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.GetByIdAsync(id);
@@ -67,12 +101,23 @@ public class HeroesController : ControllerBase
         if (hero.UserId != userId)
             return StatusCode(403, "You don't have permission to view this hero.");
 
-        return Ok(hero);
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return Ok(heroResponse);
     }
 
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<Hero>> Create(CreateHeroModel createHeroModel)
+    public async Task<ActionResult<HeroResponse>> Create(CreateHeroModel createHeroModel)
     {
         if (!Enum.TryParse<Race>(createHeroModel.Race, ignoreCase: true, out var race))
             throw new ArgumentException($"Invalid race: {createHeroModel.Race}");
@@ -86,7 +131,7 @@ public class HeroesController : ControllerBase
             Codename = createHeroModel.Codename,
             OriginStory = createHeroModel.OriginStory,
             Race = race,
-            Alignment = alignment,
+            Alignment = alignment
         };
 
         var hero = await _heroService.CreateAsync(createHero);
@@ -95,7 +140,7 @@ public class HeroesController : ControllerBase
 
     [HttpPatch]
     [Authorize]
-    public async Task<ActionResult<Hero>> Update(UpdateHeroModel updateHeroModel)
+    public async Task<ActionResult<HeroResponse>> Update(UpdateHeroModel updateHeroModel)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         if(userId != updateHeroModel.UserId)
@@ -118,25 +163,58 @@ public class HeroesController : ControllerBase
             Alignment = alignment
         };
         var hero = await _heroService.UpdateAsync(updateHero);
-        return Ok(hero);
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return Ok(heroResponse);
     }
 
     [HttpPatch("{id}/register")]
     [Authorize]
-    public async Task<ActionResult<Hero>> Register(int id)
+    public async Task<ActionResult<HeroResponse>> Register(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.RegisterAsync(id, userId);
-        return Ok(hero);
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return Ok(heroResponse);
     }
 
     [HttpPatch("{id}/retire")]
     [Authorize]
-    public async Task<ActionResult<Hero>> Retire(int id)
+    public async Task<ActionResult<HeroResponse>> Retire(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         var hero = await _heroService.RetireAsync(id, userId);
-        return Ok(hero);
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Race = hero.Race.ToString(),
+            Status = hero.Status.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return Ok(heroResponse);
     }
 
     [HttpDelete("{id}")]

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SuperheroRegistry.Api.Model
+namespace SuperheroRegistry.Api.Model.RequestModels
 {
     public class CreatePowerModel
     {

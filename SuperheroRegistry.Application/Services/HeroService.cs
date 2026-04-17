@@ -29,13 +29,10 @@ namespace SuperheroRegistry.Application.Services
             var hero = await _heroRepository.GetByIdAsync(createPower.HeroId)
                 ?? throw new KeyNotFoundException($"Hero with id {createPower.HeroId} not found.");
 
-            var power = new Power(createPower.Name, createPower.Description, createPower.HeroId, hero);
-
-            if (power == null)
-                throw new DomainException("Power cannot be null.");
-
             if (hero.Status == HeroStatus.Retired)
                 throw new DomainException("Cannot manage powers for retired heroes.");
+
+            var power = new Power(createPower.Name, createPower.Description, createPower.HeroId);
 
             hero.Powers.Add(power);
             return await _heroRepository.UpdateAsync(hero);          
@@ -128,7 +125,6 @@ namespace SuperheroRegistry.Application.Services
 
         public async Task RemovePowerAsync(int heroId, int powerId)
         {
-            
             var hero = await _heroRepository.GetByIdAsync(heroId)
                 ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
 
@@ -144,27 +140,25 @@ namespace SuperheroRegistry.Application.Services
 
             var power = hero.Powers.FirstOrDefault(p => p.Id == powerId) 
                 ?? throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
-           
+
             hero.Powers.Remove(power);
             await _heroRepository.UpdateAsync(hero);
         }
 
         public async Task<Hero> UpdateAsync(UpdateHero updateHero)
         {
-            
             var hero = await _heroRepository.GetByIdAsync(updateHero.Id)
                 ?? throw new KeyNotFoundException($"Hero with id {updateHero.Id} not found.");
 
             if (hero.UserId != updateHero.UserId)
                 throw new UnauthorizedAccessException("You can only update your own heroes.");
-            
+
             hero.Codename = updateHero.Codename;
             hero.OriginStory = updateHero.OriginStory;
             hero.Race = updateHero.Race;
             hero.Alignment = updateHero.Alignment;
 
             return await _heroRepository.UpdateAsync(hero);
-            
         }
 
         /// <summary>
