@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Text;
 
 namespace SuperheroRegistry.Application.Services;
-
+//TODO auth servis mora da bude immpl u api sloju, nema app sloj veze sa auth
 public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<IdentityUser> _userManager;
