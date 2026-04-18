@@ -12,7 +12,7 @@ namespace SuperheroRegistry.API.Controllers;
 /// </summary>
 [ApiController]
 [Authorize]
-[Route("api/heroes/")]
+[Route("api/powers/")]
 public class PowersController : ControllerBase
 {
     private readonly IHeroService _heroService;
@@ -24,14 +24,19 @@ public class PowersController : ControllerBase
         _authenticationService = authenticationService;
     }
 
-    [HttpPost("{heroId}/powers")]
+    [HttpPost("{heroId}")]
     public async Task<ActionResult<Hero>> AddPower(int heroId, CreatePowerModel createPowerModel)
     {
-        var hero = await _heroService.GetByIdAsync(heroId);
         var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId == null)
+            return Unauthorized("User ID not found in token.");
         
+        var hero = await _heroService.GetByIdAsync(heroId);
+        if(hero == null)
+            return NotFound($"Hero with ID {heroId} not found.");
+
         if (hero.UserId != userId)
-            return StatusCode(403, "You can only add powers to your own heroes.");
+            return Forbid("You can only add powers to your own heroes.");
 
         var createPower = new CreatePower
         {
@@ -40,11 +45,11 @@ public class PowersController : ControllerBase
             Description = createPowerModel.Description
         };
 
-        var updatedHero = await _heroService.AddPowerAsync(createPower);
+        var updatedHero = await _heroService.AddPowerAsync(hero, createPower);
         return Ok(updatedHero);
     }
    
-    [HttpDelete("{heroId}/powers/{powerId}")]
+    [HttpDelete("{heroId}/{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
@@ -56,7 +61,7 @@ public class PowersController : ControllerBase
         if (hero.UserId != userId)
             return Forbid("You can only remove powers from your own heroes.");
 
-        await _heroService.RemovePowerAsync(heroId, powerId);
+        await _heroService.RemovePowerAsync(hero, powerId);
         return NoContent();
     }
 }

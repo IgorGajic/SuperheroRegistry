@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Api.Model.RequestModels;
 using SuperheroRegistry.Api.Model.ResponseModels;
 using SuperheroRegistry.Application.Interfaces;
-using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Model;
 
@@ -15,7 +14,6 @@ public class HeroesController : ControllerBase
 {
     private readonly IHeroService _heroService;
     private readonly IAuthenticationService _authenticationService;
-
     public HeroesController(IHeroService heroService, IAuthenticationService authenticationService)
     {
         _heroService = heroService;
@@ -76,6 +74,9 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<List<HeroResponse>>> GetMyHeroes()
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
         var heroes = await _heroService.GetByUserIdAsync(userId);
         var heroResponses = heroes.Select(hero => new HeroResponse
         {
@@ -96,7 +97,13 @@ public class HeroesController : ControllerBase
     public async Task<ActionResult<HeroResponse>> GetById(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
         var hero = await _heroService.GetByIdAsync(id);
+
+        if(hero == null)
+            return NotFound($"Hero with ID {id} not found.");
 
         if (hero.UserId != userId)
             return StatusCode(403, "You don't have permission to view this hero.");
@@ -115,15 +122,15 @@ public class HeroesController : ControllerBase
         return Ok(heroResponse);
     }
 
-    [HttpPost]
+    [HttpPut] 
     [Authorize]
     public async Task<ActionResult<HeroResponse>> Create(CreateHeroModel createHeroModel)
     {
         if (!Enum.TryParse<Race>(createHeroModel.Race, ignoreCase: true, out var race))
-            throw new ArgumentException($"Invalid race: {createHeroModel.Race}");
+            return BadRequest($"Invalid race: {createHeroModel.Race}");
 
         if (!Enum.TryParse<Alignment>(createHeroModel.Alignment, ignoreCase: true, out var alignment))
-            throw new ArgumentException($"Invalid alignment: {createHeroModel.Alignment}");
+            return BadRequest($"Invalid alignment: {createHeroModel.Alignment}");
 
         var createHero = new CreateHero
         {
@@ -135,25 +142,39 @@ public class HeroesController : ControllerBase
         };
 
         var hero = await _heroService.CreateAsync(createHero);
-        return CreatedAtAction(nameof(GetById), new { id = hero.Id }, hero);
+
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return CreatedAtAction(nameof(GetById), new { id = hero.Id }, heroResponse);
     }
 
-    [HttpPatch]
+    [HttpPost]
     [Authorize]
     public async Task<ActionResult<HeroResponse>> Update(UpdateHeroModel updateHeroModel)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
-        if(userId != updateHeroModel.UserId)
-            return StatusCode(403, "You don't have permission to update this hero.");
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
+        if (userId != updateHeroModel.UserId)
+            return Forbid("You don't have permission to update this hero.");
 
         if (!Enum.TryParse<Race>(updateHeroModel.Race, ignoreCase: true, out var race))
-            throw new ArgumentException($"Invalid race: {updateHeroModel.Race}");
+            return BadRequest($"Invalid race: {updateHeroModel.Race}");
 
         if (!Enum.TryParse<Alignment>(updateHeroModel.Alignment, ignoreCase: true, out var alignment))
-            throw new ArgumentException($"Invalid alignment: {updateHeroModel.Alignment}");
+            return BadRequest($"Invalid alignment: {updateHeroModel.Alignment}");
        
-        
-        var updateHero = new UpdateHero
+        var hero = await _heroService.UpdateAsync(new UpdateHero
         {
             Id = updateHeroModel.Id,
             UserId = updateHeroModel.UserId,
@@ -161,8 +182,8 @@ public class HeroesController : ControllerBase
             OriginStory = updateHeroModel.OriginStory,
             Race = race,
             Alignment = alignment
-        };
-        var hero = await _heroService.UpdateAsync(updateHero);
+        });
+
         var heroResponse = new HeroResponse
         {
             Id = hero.Id,
@@ -177,12 +198,24 @@ public class HeroesController : ControllerBase
         return Ok(heroResponse);
     }
 
-    [HttpPatch("{id}/register")]
+    [HttpPost("{id}/register")]
     [Authorize]
     public async Task<ActionResult<HeroResponse>> Register(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
-        var hero = await _heroService.RegisterAsync(id, userId);
+
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
+        var hero = await _heroService.GetByIdAsync(id);
+
+        if(hero == null)
+            return NotFound($"Hero with ID {id} not found.");
+
+        if(hero.UserId != userId)
+            return Forbid("You don't have permission to register this hero.");
+
+        hero = await _heroService.RegisterAsync(hero);
         var heroResponse = new HeroResponse
         {
             Id = hero.Id,
@@ -197,12 +230,22 @@ public class HeroesController : ControllerBase
         return Ok(heroResponse);
     }
 
-    [HttpPatch("{id}/retire")]
+    [HttpPost("{id}/retire")] 
     [Authorize]
     public async Task<ActionResult<HeroResponse>> Retire(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
-        var hero = await _heroService.RetireAsync(id, userId);
+
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
+        var hero = await _heroService.GetByIdAsync(id);
+
+        if(hero.UserId != userId)
+            return Forbid("You don't have permission to retire this hero.");
+
+        hero = await _heroService.RetireAsync(hero);
+
         var heroResponse = new HeroResponse
         {
             Id = hero.Id,
@@ -222,7 +265,18 @@ public class HeroesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
-        await _heroService.DeleteAsync(id, userId);
+        if(userId == null)
+            return Unauthorized("Invalid user token.");
+
+        var hero = await _heroService.GetByIdAsync(id);
+       
+        if(hero == null)
+            return NotFound($"Hero with ID {id} not found.");
+
+        if (hero.UserId != userId)
+            return Forbid("You can only delete your own heroes.");
+
+        await _heroService.DeleteAsync(hero);
         return NoContent();
     }
 }

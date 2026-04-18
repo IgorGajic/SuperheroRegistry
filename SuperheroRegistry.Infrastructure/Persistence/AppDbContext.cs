@@ -9,8 +9,8 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<Hero> Heroes { get; set; } = null!;
-    public DbSet<Power> Powers { get; set; } = null!;
+    public DbSet<Hero> Heroes { get; set; } = null!; //DbSet<HeroEntity> mora da bude
+    public DbSet<Power> Powers { get; set; } = null!; //DbSet<PowerEntity> mora da bude
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

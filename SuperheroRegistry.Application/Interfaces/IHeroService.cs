@@ -12,11 +12,11 @@ namespace SuperheroRegistry.Application.Interfaces
         Task<List<Hero>> GetByUserIdAsync(string userId);
         Task<Hero> CreateAsync(CreateHero createHero);
         Task<Hero> UpdateAsync(UpdateHero updateHero);
-        Task<Hero> RegisterAsync(int id, string userId);
-        Task<Hero> RetireAsync(int id, string userId);
-        Task DeleteAsync(int id, string userId);
-        Task<Hero> AddPowerAsync(CreatePower createPower);
-        Task RemovePowerAsync(int heroId, int powerId);
+        Task<Hero> RegisterAsync(Hero hero);
+        Task<Hero> RetireAsync(Hero hero);
+        Task DeleteAsync(Hero hero);
+        Task<Hero> AddPowerAsync(Hero hero, CreatePower createPower);
+        Task RemovePowerAsync(Hero hero, int powerId);
         Task<bool> CodenameExistsAsync(string codename);
     }
 }

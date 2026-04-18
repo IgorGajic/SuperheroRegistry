@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Text;
 
 namespace SuperheroRegistry.Application.Services;
-
+//TODO auth servis mora da bude immpl u api sloju, nema app sloj veze sa auth
 public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<IdentityUser> _userManager;
@@ -43,10 +43,10 @@ public class AuthenticationService : IAuthenticationService
         return (true, token, null);
     }
 
-    public string GetUserIdFromClaims(ClaimsPrincipal claimsPrincipal)
+    public string? GetUserIdFromClaims(ClaimsPrincipal claimsPrincipal)
     {
         var userId = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userId ?? throw new UnauthorizedAccessException("User not found in token.");
+        return userId;
     }
 
     private string GenerateToken(IdentityUser user)

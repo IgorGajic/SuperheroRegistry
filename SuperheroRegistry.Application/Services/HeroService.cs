@@ -13,22 +13,17 @@ namespace SuperheroRegistry.Application.Services
     public class HeroService : IHeroService
     {
         private readonly IHeroRepository _heroRepository;
-        private readonly ITransactionManager _transactionManager;
 
-        public HeroService(IHeroRepository heroRepository, ITransactionManager transactionManager)
+        public HeroService(IHeroRepository heroRepository)
         {
             _heroRepository = heroRepository;
-            _transactionManager = transactionManager;
         }
 
         /// <summary>
         /// Adds a new power to an existing hero.
         /// </summary>
-        public async Task<Hero> AddPowerAsync(CreatePower createPower)
+        public async Task<Hero> AddPowerAsync(Hero hero, CreatePower createPower)
         {
-            var hero = await _heroRepository.GetByIdAsync(createPower.HeroId)
-                ?? throw new KeyNotFoundException($"Hero with id {createPower.HeroId} not found.");
-
             if (hero.Status == HeroStatus.Retired)
                 throw new DomainException("Cannot manage powers for retired heroes.");
 
@@ -43,25 +38,12 @@ namespace SuperheroRegistry.Application.Services
             var hero = new Hero(createHero.Codename, createHero.OriginStory, createHero.Race, createHero.Alignment, createHero.UserId);
             return await _heroRepository.AddAsync(hero);
         }
-
-        /// <summary>
-        /// Deletes a draft hero. Only heroes that have not been registered can be deleted.
-        /// </summary>
-        public async Task DeleteAsync(int id, string userId)
+        public async Task DeleteAsync(Hero hero)
         {
-            await _transactionManager.ExecuteAsync(async () =>
-            {
-                var hero = await _heroRepository.GetByIdAsync(id)
-                    ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
+            if (hero.Status != HeroStatus.Draft)
+                throw new InvalidOperationException("Only draft heroes can be deleted.");
 
-                if (hero.Status != HeroStatus.Draft)
-                    throw new InvalidOperationException("Only draft heroes can be deleted.");
-
-                if (hero.UserId != userId)
-                    throw new UnauthorizedAccessException("You can only delete your own heroes.");
-
-                await _heroRepository.DeleteAsync(hero);
-            });
+            await _heroRepository.DeleteAsync(hero);
         }
 
         public async Task<List<Hero>> GetAllAsync()
@@ -72,8 +54,7 @@ namespace SuperheroRegistry.Application.Services
 
         public async Task<Hero> GetByIdAsync(int id)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with ID {id} not found.");
+            var hero = await _heroRepository.GetByIdAsync(id);
             return hero;
         }
 
@@ -97,17 +78,8 @@ namespace SuperheroRegistry.Application.Services
             return await _heroRepository.CodenameExistsAsync(codename);
         }
 
-        /// <summary>
-        /// Registers a hero. Only Draft heroes can be registered
-        /// </summary>
-        public async Task<Hero> RegisterAsync(int id, string userId)
+        public async Task<Hero> RegisterAsync(Hero hero)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
-
-            if (hero.UserId != userId)
-                throw new UnauthorizedAccessException("You can only register your own heroes.");
-
             if (hero.Status != HeroStatus.Draft)
                 throw new InvalidOperationException("Only draft heroes can be registered.");
 
@@ -123,11 +95,8 @@ namespace SuperheroRegistry.Application.Services
             return await _heroRepository.UpdateAsync(hero);
         }
 
-        public async Task RemovePowerAsync(int heroId, int powerId)
+        public async Task RemovePowerAsync(Hero hero, int powerId)
         {
-            var hero = await _heroRepository.GetByIdAsync(heroId)
-                ?? throw new KeyNotFoundException($"Hero with id {heroId} not found.");
-
             if (hero.Status == HeroStatus.Retired)
             {
                 throw new DomainException("Cannot manage powers for retired heroes.");
@@ -139,7 +108,7 @@ namespace SuperheroRegistry.Application.Services
             }
 
             var power = hero.Powers.FirstOrDefault(p => p.Id == powerId) 
-                ?? throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {heroId}.");
+                ?? throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {hero.Id}.");
 
             hero.Powers.Remove(power);
             await _heroRepository.UpdateAsync(hero);
@@ -160,20 +129,11 @@ namespace SuperheroRegistry.Application.Services
 
             return await _heroRepository.UpdateAsync(hero);
         }
-
-        /// <summary>
-        /// Retires a hero. Transitions status from Registered to Retired.
-        /// </summary>
-        public async Task<Hero> RetireAsync(int id, string userId)
+        public async Task<Hero> RetireAsync(Hero hero)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with id {id} not found.");
-
             if (hero.Status != HeroStatus.Registered)
                 throw new DomainException("Only registered heroes can be retired.");
 
-            if (hero.UserId != userId)
-                throw new UnauthorizedAccessException("You can only retire your own heroes.");
             hero.Status = HeroStatus.Retired;
 
             await _heroRepository.UpdateAsync(hero);
