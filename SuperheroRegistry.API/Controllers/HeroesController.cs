@@ -142,7 +142,19 @@ public class HeroesController : ControllerBase
         };
 
         var hero = await _heroService.CreateAsync(createHero);
-        return CreatedAtAction(hero.Codename, new { id = hero.Id }, hero);
+
+        var heroResponse = new HeroResponse
+        {
+            Id = hero.Id,
+            UserId = hero.UserId,
+            Codename = hero.Codename,
+            OriginStory = hero.OriginStory,
+            Status = hero.Status.ToString(),
+            Race = hero.Race.ToString(),
+            Alignment = hero.Alignment.ToString(),
+            Powers = hero.Powers
+        };
+        return CreatedAtAction(nameof(GetById), new { id = hero.Id }, heroResponse);
     }
 
     [HttpPost]

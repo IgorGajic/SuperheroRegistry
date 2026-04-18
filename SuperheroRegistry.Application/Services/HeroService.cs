@@ -54,8 +54,7 @@ namespace SuperheroRegistry.Application.Services
 
         public async Task<Hero> GetByIdAsync(int id)
         {
-            var hero = await _heroRepository.GetByIdAsync(id)
-                ?? throw new KeyNotFoundException($"Hero with ID {id} not found.");
+            var hero = await _heroRepository.GetByIdAsync(id);
             return hero;
         }
 
