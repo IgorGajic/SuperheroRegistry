@@ -263,7 +263,7 @@ namespace SuperheroRegistry.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_HeroEntity_UserId");
 
-                    b.ToTable("HeroeEntities");
+                    b.ToTable("Heroes", (string)null);
                 });
 
             modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.PowerEntity", b =>
@@ -289,7 +289,7 @@ namespace SuperheroRegistry.Infrastructure.Migrations
 
                     b.HasIndex("HeroId");
 
-                    b.ToTable("PowerEntities");
+                    b.ToTable("Powers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
