@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Api.Model.RequestModels;
+using SuperheroRegistry.Api.Model.ResponseModels;
+using SuperheroRegistry.API.Interfaces;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Model;
@@ -25,7 +27,7 @@ public class PowersController : ControllerBase
     }
 
     [HttpPost("{heroId}")]
-    public async Task<ActionResult<Hero>> AddPower(int heroId, CreatePowerModel createPowerModel)
+    public async Task<ActionResult<PowerResponse>> AddPower(int heroId, CreatePowerModel createPowerModel)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
         if(userId == null)
@@ -46,13 +48,17 @@ public class PowersController : ControllerBase
         };
 
         var updatedHero = await _heroService.AddPowerAsync(hero, createPower);
-        return Ok(updatedHero);
+        var powerResponse = MapPowerToResponse(updatedHero.Powers.Last());
+        return Ok(powerResponse);
     }
    
     [HttpDelete("{heroId}/{powerId}")]
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId == null)
+            return Unauthorized("User ID not found in token.");
+
         var hero = await _heroService.GetByIdAsync(heroId);
 
         if (hero == null)
@@ -63,5 +69,16 @@ public class PowersController : ControllerBase
 
         await _heroService.RemovePowerAsync(hero, powerId);
         return NoContent();
+    }
+
+    private static PowerResponse MapPowerToResponse(Power power)
+    {
+        return new PowerResponse
+        {
+            Id = power.Id,
+            Name = power.Name,
+            Description = power.Description,
+            HeroId = power.HeroId
+        };
     }
 }

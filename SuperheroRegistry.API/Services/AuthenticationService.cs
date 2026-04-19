@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using SuperheroRegistry.Application.Interfaces;
+using SuperheroRegistry.API.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace SuperheroRegistry.Application.Services;
-//TODO auth servis mora da bude immpl u api sloju, nema app sloj veze sa auth
+namespace SuperheroRegistry.API.Services;
+
 public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<IdentityUser> _userManager;
@@ -18,6 +17,7 @@ public class AuthenticationService : IAuthenticationService
         _userManager = userManager;
         _configuration = configuration;
     }
+
     public async Task<(bool succeeded, string? token, string? error)> RegisterAsync(string username, string password)
     {
         var user = new IdentityUser { UserName = username };

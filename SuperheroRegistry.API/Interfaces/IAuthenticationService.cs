@@ -1,8 +1,8 @@
 using System.Security.Claims;
 
-namespace SuperheroRegistry.Application.Interfaces;
+namespace SuperheroRegistry.API.Interfaces;
 
-public interface IAuthenticationService //ovo ide u API
+public interface IAuthenticationService
 {
     Task<(bool succeeded, string? token, string? error)> RegisterAsync(string username, string password);
     Task<(bool succeeded, string? token, string? error)> LoginAsync(string username, string password);

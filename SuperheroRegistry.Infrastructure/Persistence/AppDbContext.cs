@@ -1,16 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SuperheroRegistry.Domain.Entities;
+using SuperheroRegistry.Infrastructure.Persistence.Entities;
 
 namespace SuperheroRegistry.Infrastructure.Persistence;
 
-public class AppDbContext : IdentityDbContext<IdentityUser>
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<Hero> Heroes { get; set; } = null!; //DbSet<HeroEntity> mora da bude
-    public DbSet<Power> Powers { get; set; } = null!; //DbSet<PowerEntity> mora da bude
+    public DbSet<HeroEntity> HeroEntities { get; set; } = null!; 
+    public DbSet<PowerEntity> PowerEntities { get; set; } = null!; 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,28 +16,38 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
         base.OnModelCreating(modelBuilder);
         
         // Hero
-        modelBuilder.Entity<Hero>(entity =>
+        modelBuilder.Entity<HeroEntity>(entity =>
         {
             entity.HasKey(hero => hero.Id);
-            entity.Property(hero => hero.Codename).IsRequired().HasMaxLength(100);
+            entity.Property(hero => hero.Codename).IsRequired();
             entity.Property(hero => hero.OriginStory).IsRequired();
-            entity.Property(hero => hero.Status).HasConversion<string>();
-            entity.Property(hero => hero.Race).HasConversion<string>();
-            entity.Property(hero => hero.Alignment).HasConversion<string>();
+            entity.Property(hero => hero.Status).IsRequired();
+            entity.Property(hero => hero.Race).IsRequired();
+            entity.Property(hero => hero.Alignment).IsRequired();
 
             entity.HasOne<IdentityUser>()
                   .WithMany()
                   .HasForeignKey(hero => hero.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(hero => hero.Powers)
-                  .WithOne(power => power.Hero)
+            entity.HasMany(hero => hero.PowerEntities)
+                  .WithOne(power => power.HeroEntity)
                   .HasForeignKey(power => power.HeroId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes for query optimization
+            entity.HasIndex(h => h.UserId)
+                  .HasDatabaseName("IX_HeroEntity_UserId");
+
+            entity.HasIndex(h => h.Codename)
+                  .HasDatabaseName("IX_HeroEntity_Codename");
+
+            entity.HasIndex(h => h.Status)
+                  .HasDatabaseName("IX_HeroEntity_Status");
         });
 
         // Power
-        modelBuilder.Entity<Power>(entity =>
+        modelBuilder.Entity<PowerEntity>(entity =>
         {
             entity.HasKey(power => power.Id);
             entity.Property(power => power.Name).IsRequired();

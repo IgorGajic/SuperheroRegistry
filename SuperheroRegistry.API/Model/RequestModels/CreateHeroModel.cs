@@ -4,9 +4,6 @@ namespace SuperheroRegistry.Api.Model.RequestModels
 {
     public class CreateHeroModel
     {
-        [Required]
-        public string UserId { get; set; }
-
         [Required(ErrorMessage = "Codename is required.")]
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Codename must be between 3 and 100 characters.")]
         public string Codename { get; set; }
