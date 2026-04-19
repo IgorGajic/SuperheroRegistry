@@ -87,7 +87,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
         public async Task<Hero> UpdateAsync(Hero hero)
         {
-            var heroEntity = GetHeroEntityByHeroId(hero.Id)
+            var heroEntity = await GetHeroEntityByHeroIdWithPowersAsync(hero.Id)
                 ?? throw new KeyNotFoundException($"Hero with id {hero.Id} not found.");
 
             heroEntity.Codename = hero.Codename;
@@ -96,8 +96,40 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
             heroEntity.Alignment = hero.Alignment.ToString();
             heroEntity.Status = hero.Status.ToString();
 
+            // Remove powers that are no longer in the domain model
+            var powersToRemove = heroEntity.PowerEntities
+                .Where(powerEntity => !hero.Powers.Any(p => p.Id == powerEntity.Id))
+                .ToList();
+            foreach (var power in powersToRemove)
+            {
+                heroEntity.PowerEntities.Remove(power);
+            }
+
+            // Add new powers that don't exist in the database (Id == 0)
+            var newPowerMap = new Dictionary<Power, PowerEntity>();
+            var newPowers = hero.Powers.Where(p => p.Id == 0).ToList();
+
+            foreach (var power in newPowers)
+            {
+                var powerEntity = new PowerEntity
+                {
+                    Name = power.Name,
+                    Description = power.Description,
+                    HeroId = hero.Id
+                };
+                heroEntity.PowerEntities.Add(powerEntity);
+                newPowerMap[power] = powerEntity;
+            }
+
             _appDbContext.HeroeEntities.Update(heroEntity);
             await _appDbContext.SaveChangesAsync();
+
+            // Sync generated IDs back to domain objects
+            foreach (var (power, powerEntity) in newPowerMap)
+            {
+                power.Id = powerEntity.Id;
+            }
+
             return hero;
         }
 
@@ -105,6 +137,13 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         private HeroEntity? GetHeroEntityByHeroId(int heroId)
         {
             return _appDbContext.HeroeEntities.Find(heroId);
+        }
+
+        private async Task<HeroEntity?> GetHeroEntityByHeroIdWithPowersAsync(int heroId)
+        {
+            return await _appDbContext.HeroeEntities
+                .Include(h => h.PowerEntities)
+                .FirstOrDefaultAsync(h => h.Id == heroId);
         }
 
         private Hero MapEntityToHero(HeroEntity entity)
