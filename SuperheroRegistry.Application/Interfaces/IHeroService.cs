@@ -6,8 +6,8 @@ namespace SuperheroRegistry.Application.Interfaces
 {
     public interface IHeroService
     {
-        Task<List<Hero>> GetAllAsync();
-        Task<List<Hero>> GetRegisteredAsync();
+        Task<List<Hero>> GetAllHeroesAsync();
+        Task<List<Hero>> GetRegisteredHeroesAsync();
         Task<Hero> GetByIdAsync(int id);
         Task<List<Hero>> GetByUserIdAsync(string userId);
         Task<Hero> CreateAsync(CreateHero createHero);
@@ -16,7 +16,7 @@ namespace SuperheroRegistry.Application.Interfaces
         Task<Hero> RetireAsync(Hero hero);
         Task DeleteAsync(Hero hero);
         Task<Hero> AddPowerAsync(Hero hero, CreatePower createPower);
-        Task RemovePowerAsync(Hero hero, int powerId);
+        Task<Hero> RemovePowerAsync(Hero hero, int powerId);
         Task<bool> CodenameExistsAsync(string codename);
     }
 }

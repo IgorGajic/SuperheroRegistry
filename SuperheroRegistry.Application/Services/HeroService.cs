@@ -46,9 +46,9 @@ namespace SuperheroRegistry.Application.Services
             await _heroRepository.DeleteAsync(hero);
         }
 
-        public async Task<List<Hero>> GetAllAsync()
+        public async Task<List<Hero>> GetAllHeroesAsync()
         {
-            var heroes = await _heroRepository.GetAllAsync();
+            var heroes = await _heroRepository.GetAllHeroesAsync();
             return heroes;
         }
 
@@ -58,13 +58,9 @@ namespace SuperheroRegistry.Application.Services
             return hero;
         }
 
-        /// <summary>
-        /// Retrieves all heroes with Registered status.
-        /// </summary>
-        public async Task<List<Hero>> GetRegisteredAsync()
+        public async Task<List<Hero>> GetRegisteredHeroesAsync()
         {
-            var heroes = await _heroRepository.GetRegisteredAsync();
-            return heroes.ToList();
+            return await _heroRepository.GetRegisteredAsync();
         }
 
         public async Task<List<Hero>> GetByUserIdAsync(string userId)
@@ -91,11 +87,10 @@ namespace SuperheroRegistry.Application.Services
                     throw new DomainException($"Origin story contains forbidden phrase: '{phrase}'.");
 
             hero.Status = HeroStatus.Registered;
-
             return await _heroRepository.UpdateAsync(hero);
         }
 
-        public async Task RemovePowerAsync(Hero hero, int powerId)
+        public async Task<Hero> RemovePowerAsync(Hero hero, int powerId)
         {
             if (hero.Status == HeroStatus.Retired)
             {
@@ -111,16 +106,13 @@ namespace SuperheroRegistry.Application.Services
                 ?? throw new KeyNotFoundException($"Power with id {powerId} not found for hero with id {hero.Id}.");
 
             hero.Powers.Remove(power);
-            await _heroRepository.UpdateAsync(hero);
+            return await _heroRepository.UpdateAsync(hero);
         }
 
         public async Task<Hero> UpdateAsync(UpdateHero updateHero)
         {
             var hero = await _heroRepository.GetByIdAsync(updateHero.Id)
                 ?? throw new KeyNotFoundException($"Hero with id {updateHero.Id} not found.");
-
-            if (hero.UserId != updateHero.UserId)
-                throw new UnauthorizedAccessException("You can only update your own heroes.");
 
             hero.Codename = updateHero.Codename;
             hero.OriginStory = updateHero.OriginStory;

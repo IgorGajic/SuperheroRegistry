@@ -5,10 +5,8 @@ using SuperheroRegistry.Infrastructure.Persistence.Entities;
 
 namespace SuperheroRegistry.Infrastructure.Persistence;
 
-public class AppDbContext : IdentityDbContext<IdentityUser>
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<HeroEntity> HeroeEntities { get; set; } = null!; 
     public DbSet<PowerEntity> PowerEntities { get; set; } = null!; 
 
@@ -36,6 +34,16 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
                   .WithOne(power => power.HeroEntity)
                   .HasForeignKey(power => power.HeroId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Indexes for query optimization
+            entity.HasIndex(h => h.UserId)
+                  .HasDatabaseName("IX_HeroEntity_UserId");
+
+            entity.HasIndex(h => h.Codename)
+                  .HasDatabaseName("IX_HeroEntity_Codename");
+
+            entity.HasIndex(h => h.Status)
+                  .HasDatabaseName("IX_HeroEntity_Status");
         });
 
         // Power

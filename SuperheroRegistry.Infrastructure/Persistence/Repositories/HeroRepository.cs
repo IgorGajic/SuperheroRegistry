@@ -16,8 +16,21 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         public async Task<Hero> AddAsync(Hero hero)
         {
-            _appDbContext.HeroeEntities.Add(mapHeroToEntity(hero));
+            var heroEntity = new HeroEntity
+            {
+                Codename = hero.Codename,
+                OriginStory = hero.OriginStory,
+                UserId = hero.UserId,
+                Race = hero.Race.ToString(),
+                Alignment = hero.Alignment.ToString(),
+                Status = hero.Status.ToString(),
+                //novi heroji nemaju moci
+                PowerEntities =  []
+            };
+
+            _appDbContext.HeroeEntities.Add(heroEntity);
             await _appDbContext.SaveChangesAsync();
+            hero.Id = heroEntity.Id;
             return hero;
         }
 
@@ -28,16 +41,19 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
         public async Task DeleteAsync(Hero hero)
         {
-            _appDbContext.HeroeEntities.Remove(mapHeroToEntity(hero));
+            var heroEntity = GetHeroEntityByHeroId(hero.Id) 
+                ?? throw new KeyNotFoundException($"Hero with id {hero.Id} not found.");
+
+            _appDbContext.HeroeEntities.Remove(heroEntity);
             await _appDbContext.SaveChangesAsync();
         }
-        public async Task<List<Hero>> GetAllAsync()
+        public async Task<List<Hero>> GetAllHeroesAsync()
         {
             var heroEntity = await _appDbContext.HeroeEntities
                 .Include(h => h.PowerEntities)
                 .ToListAsync();
 
-            return heroEntity.Select(mapEntityToHero).ToList();
+            return heroEntity.Select(MapEntityToHero).ToList();
         }
         public async Task<Hero?> GetByIdAsync(int id)
         {
@@ -45,7 +61,9 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 .Include(h => h.PowerEntities)
                 .FirstOrDefaultAsync(h => h.Id == id);
 
-            return mapEntityToHero(entity);
+            if (entity == null)
+                return null;
+            return MapEntityToHero(entity);
         }
         public async Task<List<Hero>> GetRegisteredAsync()
         {
@@ -55,7 +73,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 .OrderBy(h => h.Codename)
                 .ToListAsync();
 
-            return entities.Select(mapEntityToHero).ToList();
+            return entities.Select(MapEntityToHero).ToList();
         }
         public async Task<List<Hero>> GetByUserIdAsync(string userId)
         {
@@ -65,43 +83,31 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 .OrderBy(h => h.Codename)
                 .ToListAsync();
 
-            return entities.Select(mapEntityToHero).ToList();
+            return entities.Select(MapEntityToHero).ToList();
         }
         public async Task<Hero> UpdateAsync(Hero hero)
         {
-            _appDbContext.HeroeEntities.Update(mapHeroToEntity(hero));
+            var heroEntity = GetHeroEntityByHeroId(hero.Id)
+                ?? throw new KeyNotFoundException($"Hero with id {hero.Id} not found.");
+
+            heroEntity.Codename = hero.Codename;
+            heroEntity.OriginStory = hero.OriginStory;
+            heroEntity.Race = hero.Race.ToString();
+            heroEntity.Alignment = hero.Alignment.ToString();
+            heroEntity.Status = hero.Status.ToString();
+
+            _appDbContext.HeroeEntities.Update(heroEntity);
             await _appDbContext.SaveChangesAsync();
             return hero;
         }
 
 
-        private HeroEntity mapHeroToEntity(Hero hero)
+        private HeroEntity? GetHeroEntityByHeroId(int heroId)
         {
-            if(hero == null)
-                return null;
-
-            List<PowerEntity> powers = hero.Powers?.Select(p => new PowerEntity
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                HeroId = hero.Id
-            }).ToList() ?? [];
-
-            return new HeroEntity
-            {
-                Id = hero.Id,
-                Codename = hero.Codename,
-                OriginStory = hero.OriginStory,
-                Status = hero.Status.ToString(),
-                Race = hero.Race.ToString(),
-                Alignment = hero.Alignment.ToString(),
-                UserId = hero.UserId,
-                PowerEntities = powers
-            };
+            return _appDbContext.HeroeEntities.Find(heroId);
         }
 
-        private Hero mapEntityToHero(HeroEntity entity)
+        private Hero MapEntityToHero(HeroEntity entity)
         {
             List<Power> powers = entity.PowerEntities?.Select(p => new Power(
                 p.Name,
@@ -121,7 +127,6 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 Status = Enum.Parse<HeroStatus>(entity.Status),
                 Powers = powers
             };
-            hero.Status = Enum.Parse<HeroStatus>(entity.Status);
             foreach(var power in hero.Powers)
             {
                 power.Hero = hero;

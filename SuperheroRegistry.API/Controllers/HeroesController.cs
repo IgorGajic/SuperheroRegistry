@@ -26,7 +26,7 @@ public class HeroesController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<List<HeroResponse>>> GetRegistered()
     {
-        var heroes = await _heroService.GetRegisteredAsync();
+        var heroes = await _heroService.GetRegisteredHeroesAsync();
         var heroResponses = heroes.Select(MapHeroToResponse).ToList();
         return Ok(heroResponses);
     }
@@ -43,7 +43,7 @@ public class HeroesController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<HeroResponse>>> GetAll()
     {
-        var heroes = await _heroService.GetAllAsync();
+        var heroes = await _heroService.GetAllHeroesAsync();
         var heroResponses = heroes.Select(MapHeroToResponse).ToList();
         return Ok(heroResponses);
     }
@@ -79,7 +79,7 @@ public class HeroesController : ControllerBase
             return NotFound($"Hero with ID {id} not found.");
 
         if (hero.UserId != userId)
-            return StatusCode(403, "You don't have permission to view this hero.");
+            return Forbid("You don't have permission to view this hero.");
 
         var heroResponse = MapHeroToResponse(hero);
 
@@ -99,12 +99,10 @@ public class HeroesController : ControllerBase
         var userId = _authenticationService.GetUserIdFromClaims(User);
         if (userId == null)
             return Unauthorized("Invalid user token.");
-        if (userId != createHeroModel.UserId)
-            return Forbid("You don't have permission to create a hero for another user.");
 
         var createHero = new CreateHero
         {
-            UserId = createHeroModel.UserId,
+            UserId = userId,
             Codename = createHeroModel.Codename,
             OriginStory = createHeroModel.OriginStory,
             Race = race,
@@ -181,6 +179,8 @@ public class HeroesController : ControllerBase
             return Unauthorized("Invalid user token.");
 
         var hero = await _heroService.GetByIdAsync(id);
+        if(hero == null)
+            return NotFound($"Hero with ID {id} not found.");
 
         if (hero.UserId != userId)
             return Forbid("You don't have permission to retire this hero.");
@@ -222,7 +222,13 @@ public class HeroesController : ControllerBase
             Status = hero.Status.ToString(),
             Alignment = hero.Alignment.ToString(),
             Race = hero.Race.ToString(),
-            Powers = hero.Powers,
+            Powers = hero.Powers.Select(p => new PowerResponse
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                HeroId = p.HeroId,
+            }).ToList() ?? []
         };
     }
 }
