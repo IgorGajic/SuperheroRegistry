@@ -1,7 +1,4 @@
-﻿using SuperheroRegistry.Domain.Entities;
-using System.Text.Json.Serialization;
-
-namespace SuperheroRegistry.Api.Model.ResponseModels
+﻿namespace SuperheroRegistry.Api.Model.ResponseModels
 {
     public class PowerResponse
     {

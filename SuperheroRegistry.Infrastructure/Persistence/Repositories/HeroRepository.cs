@@ -28,7 +28,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 PowerEntities =  []
             };
 
-            _appDbContext.HeroeEntities.Add(heroEntity);
+            _appDbContext.HeroEntities.Add(heroEntity);
             await _appDbContext.SaveChangesAsync();
             hero.Id = heroEntity.Id;
             return hero;
@@ -36,7 +36,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         public async Task<bool> CodenameExistsAsync(string codename)
         {
-            return await _appDbContext.HeroeEntities
+            return await _appDbContext.HeroEntities
                 .AnyAsync(h => h.Codename == codename);
         }
         public async Task DeleteAsync(Hero hero)
@@ -44,12 +44,12 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
             var heroEntity = GetHeroEntityByHeroId(hero.Id) 
                 ?? throw new KeyNotFoundException($"Hero with id {hero.Id} not found.");
 
-            _appDbContext.HeroeEntities.Remove(heroEntity);
+            _appDbContext.HeroEntities.Remove(heroEntity);
             await _appDbContext.SaveChangesAsync();
         }
         public async Task<List<Hero>> GetAllHeroesAsync()
         {
-            var heroEntity = await _appDbContext.HeroeEntities
+            var heroEntity = await _appDbContext.HeroEntities
                 .Include(h => h.PowerEntities)
                 .ToListAsync();
 
@@ -57,7 +57,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
         public async Task<Hero?> GetByIdAsync(int id)
         {
-            var entity = await _appDbContext.HeroeEntities
+            var entity = await _appDbContext.HeroEntities
                 .Include(h => h.PowerEntities)
                 .FirstOrDefaultAsync(h => h.Id == id);
 
@@ -67,7 +67,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
         public async Task<List<Hero>> GetRegisteredAsync()
         {
-            var entities = await _appDbContext.HeroeEntities
+            var entities = await _appDbContext.HeroEntities
                 .Include(h => h.PowerEntities)
                 .Where(h => h.Status == HeroStatus.Registered.ToString())
                 .OrderBy(h => h.Codename)
@@ -77,7 +77,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
         }
         public async Task<List<Hero>> GetByUserIdAsync(string userId)
         {
-            var entities = await _appDbContext.HeroeEntities
+            var entities = await _appDbContext.HeroEntities
                 .Include(h => h.PowerEntities)
                 .Where(h => h.UserId == userId)
                 .OrderBy(h => h.Codename)
@@ -121,7 +121,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 newPowerMap[power] = powerEntity;
             }
 
-            _appDbContext.HeroeEntities.Update(heroEntity);
+            _appDbContext.HeroEntities.Update(heroEntity);
             await _appDbContext.SaveChangesAsync();
 
             // Sync generated IDs back to domain objects
@@ -136,12 +136,12 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
 
         private HeroEntity? GetHeroEntityByHeroId(int heroId)
         {
-            return _appDbContext.HeroeEntities.Find(heroId);
+            return _appDbContext.HeroEntities.Find(heroId);
         }
 
         private async Task<HeroEntity?> GetHeroEntityByHeroIdWithPowersAsync(int heroId)
         {
-            return await _appDbContext.HeroeEntities
+            return await _appDbContext.HeroEntities
                 .Include(h => h.PowerEntities)
                 .FirstOrDefaultAsync(h => h.Id == heroId);
         }
@@ -152,7 +152,11 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 p.Name,
                 p.Description,
                 p.HeroId
-            )).ToList() ?? [];
+            )
+            {
+                Id = p.Id
+            }
+            ).ToList() ?? [];
 
             var hero = new Hero(
                 entity.Codename,

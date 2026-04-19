@@ -7,7 +7,7 @@ namespace SuperheroRegistry.Infrastructure.Persistence;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options)
 {
-    public DbSet<HeroEntity> HeroeEntities { get; set; } = null!; 
+    public DbSet<HeroEntity> HeroEntities { get; set; } = null!; 
     public DbSet<PowerEntity> PowerEntities { get; set; } = null!; 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
