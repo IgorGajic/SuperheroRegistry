@@ -8,7 +8,7 @@ using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Exceptions;
 using SuperheroRegistry.Domain.Model;
 
-namespace SuperheroRegistry.Tests
+namespace SuperheroRegistry.Tests.Application.Services
 {
     public class HeroServiceTests
     {
