@@ -54,6 +54,9 @@ public class PowersController : ControllerBase
     public async Task<IActionResult> RemovePower(int heroId, int powerId)
     {
         var userId = _authenticationService.GetUserIdFromClaims(User);
+        if(userId == null)
+            return Unauthorized("User ID not found in token.");
+
         var hero = await _heroService.GetByIdAsync(heroId);
 
         if (hero == null)
