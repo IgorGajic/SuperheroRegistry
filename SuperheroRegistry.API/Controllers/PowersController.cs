@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Api.Model.RequestModels;
+using SuperheroRegistry.API.Interfaces;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Entities;
 using SuperheroRegistry.Domain.Model;

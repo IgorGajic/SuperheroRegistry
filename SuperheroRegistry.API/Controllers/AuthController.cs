@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Api.Model.Auth;
-using SuperheroRegistry.Application.Interfaces;
+using SuperheroRegistry.API.Interfaces;
 
 namespace SuperheroRegistry.API.Controllers;
 

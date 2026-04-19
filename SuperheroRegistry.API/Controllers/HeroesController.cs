@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SuperheroRegistry.Api.Model.RequestModels;
 using SuperheroRegistry.Api.Model.ResponseModels;
+using SuperheroRegistry.API.Interfaces;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Domain.Enums;
 using SuperheroRegistry.Domain.Model;
