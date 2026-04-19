@@ -82,6 +82,9 @@ namespace SuperheroRegistry.Application.Services
             if (string.IsNullOrWhiteSpace(hero.OriginStory) || hero.OriginStory.Length < HeroConstants.MinimumOriginStoryLength)
                 throw new DomainException($"Origin story must be at least '{HeroConstants.MinimumOriginStoryLength}' characters.");
 
+            if(hero.Powers.Count < HeroConstants.MinimumPowerCountForRegisteringHeroes)
+                throw new DomainException($"Hero must have at least {HeroConstants.MinimumPowerCountForRegisteringHeroes} power to be registered.");
+
             foreach (var phrase in HeroConstants.ForbiddenPhrases)
                 if (hero.OriginStory.Contains(phrase, StringComparison.OrdinalIgnoreCase))
                     throw new DomainException($"Origin story contains forbidden phrase: '{phrase}'.");

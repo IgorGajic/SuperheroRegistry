@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         // Hero
         modelBuilder.Entity<HeroEntity>(entity =>
         {
+            entity.ToTable("Heroes");
             entity.HasKey(hero => hero.Id);
             entity.Property(hero => hero.Codename).IsRequired();
             entity.Property(hero => hero.OriginStory).IsRequired();
@@ -49,6 +50,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         // Power
         modelBuilder.Entity<PowerEntity>(entity =>
         {
+            entity.ToTable("Powers");
             entity.HasKey(power => power.Id);
             entity.Property(power => power.Name).IsRequired();
             entity.Property(power => power.Description).IsRequired();

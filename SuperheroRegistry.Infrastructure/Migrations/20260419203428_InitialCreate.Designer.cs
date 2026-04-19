@@ -12,8 +12,8 @@ using SuperheroRegistry.Infrastructure.Persistence;
 namespace SuperheroRegistry.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260326001738_AddIdentity")]
-    partial class AddIdentity
+    [Migration("20260419203428_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -223,7 +223,7 @@ namespace SuperheroRegistry.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SuperheroRegistry.Domain.Entities.Hero", b =>
+            modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.HeroEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -237,8 +237,7 @@ namespace SuperheroRegistry.Infrastructure.Migrations
 
                     b.Property<string>("Codename")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("OriginStory")
                         .IsRequired()
@@ -250,17 +249,27 @@ namespace SuperheroRegistry.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Heroes");
+                    b.HasIndex("Codename")
+                        .HasDatabaseName("IX_HeroEntity_Codename");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_HeroEntity_Status");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_HeroEntity_UserId");
+
+                    b.ToTable("Heroes", (string)null);
                 });
 
-            modelBuilder.Entity("SuperheroRegistry.Domain.Entities.Power", b =>
+            modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.PowerEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +292,7 @@ namespace SuperheroRegistry.Infrastructure.Migrations
 
                     b.HasIndex("HeroId");
 
-                    b.ToTable("Powers");
+                    b.ToTable("Powers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -337,20 +346,29 @@ namespace SuperheroRegistry.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SuperheroRegistry.Domain.Entities.Power", b =>
+            modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.HeroEntity", b =>
                 {
-                    b.HasOne("SuperheroRegistry.Domain.Entities.Hero", "Hero")
-                        .WithMany("Powers")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.PowerEntity", b =>
+                {
+                    b.HasOne("SuperheroRegistry.Infrastructure.Persistence.Entities.HeroEntity", "HeroEntity")
+                        .WithMany("PowerEntities")
                         .HasForeignKey("HeroId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Hero");
+                    b.Navigation("HeroEntity");
                 });
 
-            modelBuilder.Entity("SuperheroRegistry.Domain.Entities.Hero", b =>
+            modelBuilder.Entity("SuperheroRegistry.Infrastructure.Persistence.Entities.HeroEntity", b =>
                 {
-                    b.Navigation("Powers");
+                    b.Navigation("PowerEntities");
                 });
 #pragma warning restore 612, 618
         }
