@@ -7,6 +7,7 @@ using SuperheroRegistry.API.Middleware;
 using SuperheroRegistry.API.Services;
 using SuperheroRegistry.Application.Interfaces;
 using SuperheroRegistry.Application.Services;
+using SuperheroRegistry.Domain.Model;
 using SuperheroRegistry.Infrastructure.Persistence;
 using SuperheroRegistry.Infrastructure.Persistence.Repositories;
 using System.Text;
@@ -35,7 +36,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Identity — UserManager, password hashing 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     // Relax password rules for this project
     options.Password.RequireDigit = false;

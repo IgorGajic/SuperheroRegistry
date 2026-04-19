@@ -7,16 +7,10 @@ namespace SuperheroRegistry.API.Middleware;
 /// Global exception handler middleware that catches unhandled exceptions
 /// and returns appropriate HTTP responses.
 /// </summary>
-public class GlobalExceptionHandlerMiddleware
+public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
-
-    public GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
+    private readonly RequestDelegate _next = next;
+    private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger = logger;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -71,7 +65,7 @@ public class GlobalExceptionHandlerMiddleware
 
             default:
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                response.Message = "An unexpected error occurred. Please try again later.";
+                response.Message = "An unexpected error occurred. Our backend team is notified. Please try again later.";
                 response.ErrorCode = "INTERNAL_SERVER_ERROR";
                 break;
         }

@@ -1,26 +1,21 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using SuperheroRegistry.API.Interfaces;
+using SuperheroRegistry.Domain.Model;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace SuperheroRegistry.API.Services;
 
-public class AuthenticationService : IAuthenticationService
+public class AuthenticationService(UserManager<User> userManager, IConfiguration configuration) : IAuthenticationService
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly IConfiguration _configuration;
-
-    public AuthenticationService(UserManager<IdentityUser> userManager, IConfiguration configuration)
-    {
-        _userManager = userManager;
-        _configuration = configuration;
-    }
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly IConfiguration _configuration = configuration;
 
     public async Task<(bool succeeded, string? token, string? error)> RegisterAsync(string username, string password)
     {
-        var user = new IdentityUser { UserName = username };
+        var user = new User { UserName = username };
         var result = await _userManager.CreateAsync(user, password);
 
         if (!result.Succeeded)
@@ -49,7 +44,7 @@ public class AuthenticationService : IAuthenticationService
         return userId;
     }
 
-    private string GenerateToken(IdentityUser user)
+    private string GenerateToken(User user)
     {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]!));
