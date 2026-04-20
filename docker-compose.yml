@@ -36,7 +36,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
     networks:
       - superhero-network
     restart: unless-stopped

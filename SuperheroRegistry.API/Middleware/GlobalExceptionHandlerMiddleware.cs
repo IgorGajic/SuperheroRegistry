@@ -21,11 +21,11 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
         catch (Exception ex)
         {
             _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context, ex, _logger);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static Task HandleExceptionAsync(HttpContext context, Exception exception, ILogger<GlobalExceptionHandlerMiddleware> logger)
     {
         context.Response.ContentType = "application/json";
 
@@ -67,6 +67,8 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 response.Message = "An unexpected error occurred. Our backend team is notified. Please try again later.";
                 response.ErrorCode = "INTERNAL_SERVER_ERROR";
+                // Log with Alert level to trigger instrumentation/monitoring alerts
+                logger.LogError(exception, "ALERT: Internal server error detected. ErrorCode: {ErrorCode}", response.ErrorCode);
                 break;
         }
 

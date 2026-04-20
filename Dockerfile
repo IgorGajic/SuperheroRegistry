@@ -10,7 +10,6 @@ COPY SuperheroRegistry.Tests/SuperheroRegistry.Tests.csproj SuperheroRegistry.Te
 
 # Restore dependencies
 RUN dotnet restore SuperheroRegistry.API/SuperheroRegistry.Api.csproj
-
 # Copy entire source
 COPY . .
 

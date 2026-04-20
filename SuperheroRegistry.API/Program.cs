@@ -108,8 +108,11 @@ app.UseCors();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // Swagger middleware for API documentation
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 
