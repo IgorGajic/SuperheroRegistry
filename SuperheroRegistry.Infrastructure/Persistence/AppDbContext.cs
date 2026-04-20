@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SuperheroRegistry.Domain.Model;
 using SuperheroRegistry.Infrastructure.Persistence.Entities;
 
 namespace SuperheroRegistry.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
 {
     public DbSet<HeroEntity> HeroEntities { get; set; } = null!; 
     public DbSet<PowerEntity> PowerEntities { get; set; } = null!; 
@@ -26,7 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(hero => hero.Race).IsRequired();
             entity.Property(hero => hero.Alignment).IsRequired();
 
-            entity.HasOne<IdentityUser>()
+            entity.HasOne<User>()
                   .WithMany()
                   .HasForeignKey(hero => hero.UserId)
                   .OnDelete(DeleteBehavior.Cascade);

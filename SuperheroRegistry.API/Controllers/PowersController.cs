@@ -14,7 +14,7 @@ namespace SuperheroRegistry.API.Controllers;
 /// </summary>
 [ApiController]
 [Authorize]
-[Route("api/powers/")]
+[Route("api/[controller]")]
 public class PowersController : ControllerBase
 {
     private readonly IHeroService _heroService;

@@ -1,0 +1,51 @@
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: superhero-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "SuperheroPass123!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - superhero-network
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "echo 'SELECT 1' | /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P SuperheroPass123! -b -Q 'SELECT 1' 2>&1 | grep -q 'Login failed' && exit 1 || exit 0"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  # ASP.NET Core API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: superhero-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=SuperheroRegistry;User Id=sa;Password=SuperheroPass123!;Encrypt=false;TrustServerCertificate=true;"
+      Jwt__Issuer: "SuperheroRegistry"
+      Jwt__Audience: "SuperheroRegistry"
+      Jwt__Secret: "SuperheroRegistry_Secret_Key_2024_VeryLongAndSecure"
+    ports:
+      - "8080:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - superhero-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local
+
+networks:
+  superhero-network:
+    driver: bridge
