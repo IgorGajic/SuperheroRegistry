@@ -10,6 +10,7 @@ using SuperheroRegistry.Application.Services;
 using SuperheroRegistry.Domain.Model;
 using SuperheroRegistry.Infrastructure.Persistence;
 using SuperheroRegistry.Infrastructure.Persistence.Repositories;
+using SuperheroRegistry.Infrastructure.Persistence.Seeders;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,19 +83,24 @@ builder.Services.AddHealthChecks()
 // Build
 var app = builder.Build();
 
-// Apply database migrations on startup
+// Apply database migrations and seed data on startup
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
         await dbContext.Database.MigrateAsync();
+
+        var seeder = new SeedDataInitializer(dbContext, userManager);
+        await seeder.InitializeAsync();
     }
 }
 catch (Exception ex)
 {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred while migrating the database.");
+    logger.LogError(ex, "An error occurred while migrating the database or seeding data.");
     throw;
 }
 
