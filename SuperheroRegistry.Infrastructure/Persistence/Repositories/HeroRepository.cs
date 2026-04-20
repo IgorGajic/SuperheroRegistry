@@ -24,7 +24,6 @@ namespace SuperheroRegistry.Infrastructure.Persistence.Repositories
                 Race = hero.Race.ToString(),
                 Alignment = hero.Alignment.ToString(),
                 Status = hero.Status.ToString(),
-                //novi heroji nemaju moci
                 PowerEntities =  []
             };
 
